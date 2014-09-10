@@ -3,6 +3,7 @@ package net.glowstone;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.ItemTable;
 import net.glowstone.block.blocktype.BlockType;
+import net.glowstone.entity.GlowEntity;
 import net.glowstone.entity.GlowPlayer;
 import net.glowstone.net.GlowSession;
 import org.bukkit.*;
@@ -68,6 +69,10 @@ public final class EventFactory {
 
 
     // -- Player Events
+
+    public static PlayerItemBreakEvent onPlayerItemBreakEvent(GlowPlayer player, ItemStack itemStack) {
+        return callEvent(new PlayerItemBreakEvent(player, itemStack));
+    }
 
     public static PlayerChatEvent onPlayerChat(Player player, String message) {
         return callEvent(new PlayerChatEvent(player, message));
@@ -177,6 +182,10 @@ public final class EventFactory {
         BlockType type = ItemTable.instance().getBlock(newId);
         boolean canBuild = type == null || type.canPlaceAt(block, against);
         return callEvent(new BlockCanBuildEvent(block, newId, canBuild));
+    }
+
+    public static BlockIgniteEvent onBlockIgnite(GlowBlock theBlock, BlockIgniteEvent.IgniteCause cause, GlowEntity entity, GlowBlock ignitingBlock) {
+        return callEvent(new BlockIgniteEvent(theBlock, cause, entity, ignitingBlock));
     }
 
     // -- Server Events
