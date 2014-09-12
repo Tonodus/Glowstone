@@ -6,6 +6,7 @@ import net.glowstone.block.ItemTable;
 import net.glowstone.entity.GlowPlayer;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.block.BlockIgniteEvent;
@@ -52,6 +53,8 @@ public class ItemFlintAndSteel extends ItemType {
             player.setItemInHand(holding);
             return;
         }
+
+        player.getWorld().playSound(player.getLocation(), Sound.FIRE_IGNITE, 1f, 0.8f);
 
         ItemStack afterUse = holding.clone();
         if (player.getGameMode() != GameMode.CREATIVE) {
