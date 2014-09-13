@@ -46,7 +46,7 @@ public class ItemFlintAndSteel extends ItemType {
             }
         }
 
-        ItemTable.instance().getBlock(Material.FIRE).rightClickBlock(player, clicked, BlockFace.UP, holding, clickedLoc);
+        ItemTable.instance().getBlock(Material.FIRE).rightClickBlock(player, fireBlock.getRelative(BlockFace.DOWN), BlockFace.UP, holding, clickedLoc);
 
         player.setItemInHand(afterUse);
     }
