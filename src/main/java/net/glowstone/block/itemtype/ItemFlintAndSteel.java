@@ -8,7 +8,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.EntityType;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -20,26 +19,8 @@ public class ItemFlintAndSteel extends ItemType {
 
     @Override
     public void rightClickBlock(GlowPlayer player, GlowBlock target, BlockFace face, ItemStack holding, Vector clickedLoc) {
-        switch (target.getType()) {
-            case TNT:
-                fireTnt(target);
-                break;
-            case OBSIDIAN:
-                fireNetherPortal();
-                break;
-            //TODO check for non flammable blocks
-            default:
-                setBlockOnFire(player, target, face, holding, clickedLoc);
-        }
-    }
-
-    private void fireNetherPortal() {
-        //TODO
-    }
-
-    private void fireTnt(GlowBlock tnt) {
-        tnt.setType(Material.AIR);
-        tnt.getWorld().spawnEntity(tnt.getLocation(), EntityType.PRIMED_TNT);
+        //TODO check whether we can set this block on fire
+        setBlockOnFire(player, target, face, holding, clickedLoc);
     }
 
     private void setBlockOnFire(GlowPlayer player, GlowBlock clicked, BlockFace face, ItemStack holding, Vector clickedLoc) {
