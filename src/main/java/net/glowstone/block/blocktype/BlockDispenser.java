@@ -1,5 +1,6 @@
 package net.glowstone.block.blocktype;
 
+import com.google.common.base.Optional;
 import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.block.entity.TEDispenser;
@@ -12,27 +13,29 @@ import org.bukkit.material.Dispenser;
 import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
-public class BlockDispenser extends BlockContainer {
+public class BlockDispenser extends BlockType {
 
     public BlockDispenser() {
-        setDrops(new ItemStack(Material.DISPENSER));
+        super(new BlockDirectDrops(Material.DISPENSER), new DispenserFeature());
     }
 
-    @Override
-    public TileEntity createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-        return new TEDispenser(chunk.getBlock(cx, cy, cz));
-    }
-
-    @Override
-    public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
-        super.placeBlock(player, state, face, holding, clickedLoc);
-        final MaterialData data = state.getData();
-        if (data instanceof Dispenser) {
-            ((Dispenser) data).setFacingDirection(getOppositeBlockFace(player.getLocation(), true));
-            state.setData(data);
-        } else {
-            warnMaterialData(Dispenser.class, data);
+    private static class DispenserFeature extends BlockContainer {
+        @Override
+        public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
+            return Optional.of(new TEDispenser(chunk.getBlock(cx, cy, cz)));
         }
-    }
 
+        @Override
+        public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
+            super.placeBlock(player, state, face, holding, clickedLoc);
+            final MaterialData data = state.getData();
+            if (data instanceof Dispenser) {
+                ((Dispenser) data).setFacingDirection(getOppositeBlockFace(player.getLocation(), true));
+                state.setData(data);
+            } else {
+                warnMaterialData(Dispenser.class, data);
+            }
+        }
+
+    }
 }

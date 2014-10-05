@@ -3,9 +3,9 @@ package net.glowstone.block.blocktype;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 
-public class BlockAttachable extends BlockType {
+public class BlockAttachable {
 
-    public void setAttachedFace(BlockState state, BlockFace attachedFace) {
+    public static void setAttachedFace(BlockState state, BlockFace attachedFace) {
         byte data = state.getRawData();
         switch (attachedFace) {
             case UP:

@@ -4,6 +4,7 @@ import net.glowstone.block.blocktype.*;
 import net.glowstone.block.itemtype.ItemPlaceAs;
 import net.glowstone.block.itemtype.ItemSign;
 import net.glowstone.block.itemtype.ItemType;
+import net.glowstone.block.itemtype.ItemTypeFeature;
 import org.bukkit.Material;
 
 import java.util.HashMap;
@@ -129,6 +130,14 @@ public final class ItemTable {
         reg(Material.BED, new ItemPlaceAs(Material.BED_BLOCK));
     }
 
+    private void reg(Material material, BlockTypeFeature feature) {
+        reg(material, new BlockType(feature));
+    }
+
+    private void reg(Material material, ItemTypeFeature feature) {
+        reg(material, new ItemType(feature));
+    }
+
     private void reg(Material material, ItemType type) {
         if (material.isBlock() != (type instanceof BlockType)) {
             throw new IllegalArgumentException("Cannot mismatch item and block: " + material + ", " + type);
@@ -150,6 +159,7 @@ public final class ItemTable {
 
     /**
      * Register a new, non-Vanilla ItemType. It will be assigned an ID automatically.
+     *
      * @param type the ItemType to register.
      */
     public void register(ItemType type) {
