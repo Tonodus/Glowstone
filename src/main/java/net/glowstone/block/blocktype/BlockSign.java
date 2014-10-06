@@ -1,6 +1,5 @@
 package net.glowstone.block.blocktype;
 
-import com.google.common.base.Optional;
 import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.GlowBlockState;
@@ -19,10 +18,10 @@ public class BlockSign extends BlockType {
         super(new BlockDirectDrops(Material.SIGN), new SignFeature());
     }
 
-    private static class SignFeature extends DefaultBlockTypeFeature {
+    private static class SignFeature extends BlockFeatureTE {
         @Override
-        public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-            return Optional.of(new TESign(chunk.getBlock(cx, cy, cz)));
+        public TileEntity createTE(GlowChunk chunk, int cx, int cy, int cz) {
+            return new TESign(chunk.getBlock(cx, cy, cz));
         }
 
         @Override

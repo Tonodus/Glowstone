@@ -1,6 +1,7 @@
 package net.glowstone.block.blocktype;
 
 import com.google.common.base.Optional;
+import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.entity.TEContainer;
 import net.glowstone.block.entity.TileEntity;
@@ -16,7 +17,7 @@ import java.util.LinkedList;
 /**
  * Base BlockType for containers.
  */
-public class BlockContainer extends BlockFeatureDrop {
+public abstract class BlockContainer extends BlockFeatureDrop {
     @Override
     public Optional<Boolean> blockInteract(GlowPlayer player, GlowBlock block, BlockFace face, Vector clickedLoc) {
         TileEntity te = block.getTileEntity();
@@ -42,4 +43,10 @@ public class BlockContainer extends BlockFeatureDrop {
         return list;
     }
 
+    @Override
+    public final Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
+        return Optional.of(createTE(chunk, cx, cy, cz));
+    }
+
+    protected abstract TileEntity createTE(GlowChunk chunk, int cx, int cy, int cz);
 }

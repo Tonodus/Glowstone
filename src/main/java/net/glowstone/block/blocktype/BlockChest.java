@@ -1,6 +1,5 @@
 package net.glowstone.block.blocktype;
 
-import com.google.common.base.Optional;
 import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.block.entity.TEChest;
@@ -15,8 +14,8 @@ import org.bukkit.util.Vector;
 public class BlockChest extends BlockContainer {
 
     @Override
-    public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-        return Optional.of(new TEChest(chunk.getBlock(cx, cy, cz)));
+    public TileEntity createTE(GlowChunk chunk, int cx, int cy, int cz) {
+        return new TEChest(chunk.getBlock(cx, cy, cz));
     }
 
     @Override

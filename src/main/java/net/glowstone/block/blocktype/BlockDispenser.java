@@ -1,6 +1,5 @@
 package net.glowstone.block.blocktype;
 
-import com.google.common.base.Optional;
 import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.block.entity.TEDispenser;
@@ -21,8 +20,8 @@ public class BlockDispenser extends BlockType {
 
     protected static class DispenserFeature extends BlockContainer {
         @Override
-        public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-            return Optional.of(new TEDispenser(chunk.getBlock(cx, cy, cz)));
+        public TileEntity createTE(GlowChunk chunk, int cx, int cy, int cz) {
+            return new TEDispenser(chunk.getBlock(cx, cy, cz));
         }
 
         @Override

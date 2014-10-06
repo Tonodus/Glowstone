@@ -1,6 +1,5 @@
 package net.glowstone.block.blocktype;
 
-import com.google.common.base.Optional;
 import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.block.entity.TEFurnace;
@@ -19,10 +18,10 @@ public class BlockFurnace extends BlockType {
         super(new BlockDirectDrops(Material.FURNACE), new FurnaceFeature());
     }
 
-    private static class FurnaceFeature extends DefaultBlockTypeFeature {
+    private static class FurnaceFeature extends BlockFeatureTE {
         @Override
-        public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-            return Optional.of(new TEFurnace(chunk.getBlock(cx, cy, cz)));
+        public TileEntity createTE(GlowChunk chunk, int cx, int cy, int cz) {
+            return new TEFurnace(chunk.getBlock(cx, cy, cz));
         }
 
         @Override

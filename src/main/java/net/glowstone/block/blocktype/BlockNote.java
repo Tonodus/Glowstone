@@ -10,10 +10,10 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.NoteBlock;
 import org.bukkit.util.Vector;
 
-public class BlockNote extends DefaultBlockTypeFeature {
+public class BlockNote extends BlockFeatureTE {
     @Override
-    public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-        return Optional.of(new TENote(chunk.getBlock(cx, cy, cz)));
+    public TileEntity createTE(GlowChunk chunk, int cx, int cy, int cz) {
+        return new TENote(chunk.getBlock(cx, cy, cz));
     }
 
     @Override
