@@ -83,7 +83,7 @@ public class BlockType extends ItemType {
      */
     public final TileEntity createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
         for (BlockTypeFeature feature : features) {
-            Optional<TileEntity> result = feature.createTileEntity(chunk, cx, cy, cz);
+            Optional<? extends TileEntity> result = feature.createTileEntity(chunk, cx, cy, cz);
             if (result.isPresent())
                 return result.get();
         }
