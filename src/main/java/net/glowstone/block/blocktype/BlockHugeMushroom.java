@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
-public class BlockHugeMushroom extends BlockType {
+public class BlockHugeMushroom extends BlockFeatureDrop {
     private final Random random = new Random();
     private final Material mushroomType;
     private final short data;
@@ -28,7 +28,7 @@ public class BlockHugeMushroom extends BlockType {
     }
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         int rnd = random.nextInt(100);
         if (rnd < 80) {
             return Collections.unmodifiableList(Arrays.asList(new ItemStack[0]));

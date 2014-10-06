@@ -1,6 +1,5 @@
 package net.glowstone.block.blocktype;
 
-import com.google.common.base.Optional;
 import net.glowstone.block.GlowBlock;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -9,7 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-public class BlockDirectDrops extends DefaultBlockTypeFeature {
+public class BlockDirectDrops extends BlockFeatureDrop {
     private final Material dropType;
     private final short data;
     private final int amount;
@@ -29,7 +28,7 @@ public class BlockDirectDrops extends DefaultBlockTypeFeature {
     }
 
     @Override
-    public Optional<? extends Collection<ItemStack>> getDrops(GlowBlock block) {
-        return Optional.of(Collections.unmodifiableList(Arrays.asList(new ItemStack(dropType, amount, data))));
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
+        return Collections.unmodifiableList(Arrays.asList(new ItemStack(dropType, amount, data)));
     }
 }

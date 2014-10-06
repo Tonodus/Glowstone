@@ -1,13 +1,21 @@
 package net.glowstone.block.blocktype;
 
+import com.google.common.base.Optional;
 import net.glowstone.block.GlowBlock;
+import net.glowstone.util.BooleanOptional;
 import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 
-public class BlockFire extends BlockDropless {
+public class BlockFire extends BlockType {
 
-    @Override
-    public boolean canOverride(GlowBlock block, BlockFace face, ItemStack holding) {
-        return true;
+    public BlockFire() {
+        super(new BlockDropless(), new FireFeature());
+    }
+
+    private static class FireFeature extends DefaultBlockTypeFeature {
+        @Override
+        public Optional<Boolean> canOverride(GlowBlock block, BlockFace face, ItemStack holding) {
+            return BooleanOptional.TRUE;
+        }
     }
 }

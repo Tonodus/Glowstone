@@ -9,11 +9,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
-public class BlockMelon extends BlockType {
+public class BlockMelon extends BlockFeatureDrop {
     private final Random random = new Random();
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         return Collections.unmodifiableList(Arrays.asList(new ItemStack(Material.MELON, random.nextInt(5) + 3)));
     }
 }

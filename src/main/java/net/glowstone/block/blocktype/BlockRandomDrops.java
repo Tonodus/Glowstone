@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
-public class BlockRandomDrops extends BlockType {
+public class BlockRandomDrops extends BlockFeatureDrop {
     private final Random random = new Random();
     private final Material dropType;
     private final short data;
@@ -32,7 +32,7 @@ public class BlockRandomDrops extends BlockType {
     }
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         return Collections.unmodifiableList(Arrays.asList(new ItemStack(dropType, random.nextInt(maxDrops - minDrops + 1) + minDrops, data)));
     }
 }

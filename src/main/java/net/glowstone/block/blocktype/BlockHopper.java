@@ -1,5 +1,6 @@
 package net.glowstone.block.blocktype;
 
+import com.google.common.base.Optional;
 import net.glowstone.GlowChunk;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.block.entity.TEHopper;
@@ -11,13 +12,13 @@ import org.bukkit.block.BlockState;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-public class BlockHopper extends BlockContainer {
+public class BlockHopper extends BlockType {
 
     public BlockHopper() {
-        setDrops(new ItemStack(Material.HOPPER));
+        super(new BlockDirectDrops(Material.HOPPER), new HopperFeature());
     }
 
-    public void setFacingDirection(final BlockState bs, final BlockFace face) {
+    public static void setFacingDirection(final BlockState bs, final BlockFace face) {
         byte data;
         switch (face) {
             case DOWN:
@@ -43,15 +44,16 @@ public class BlockHopper extends BlockContainer {
         bs.setRawData(data);
     }
 
-    @Override
-    public TileEntity createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
-        return new TEHopper(chunk.getBlock(cx, cy, cz));
-    }
+    private static class HopperFeature extends BlockContainer {
+        @Override
+        public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
+            return Optional.of(new TEHopper(chunk.getBlock(cx, cy, cz)));
+        }
 
-    @Override
-    public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
-        super.placeBlock(player, state, face, holding, clickedLoc);
-        setFacingDirection(state, face.getOppositeFace());
+        @Override
+        public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
+            super.placeBlock(player, state, face, holding, clickedLoc);
+            setFacingDirection(state, face.getOppositeFace());
+        }
     }
-
 }

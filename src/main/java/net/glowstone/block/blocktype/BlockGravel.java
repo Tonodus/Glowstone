@@ -9,11 +9,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
-public class BlockGravel extends BlockType {
+public class BlockGravel extends BlockFeatureDrop {
     private final Random random = new Random();
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         return Collections.unmodifiableList(Arrays.asList(new ItemStack(random.nextInt(10) == 1 ? Material.FLINT : Material.GRAVEL, 1)));
     }
 }

@@ -6,11 +6,11 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
-public class BlockLeaves extends BlockType {
+public class BlockLeaves extends BlockFeatureDrop {
     private final Random random = new Random();
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         List<ItemStack> drops = new ArrayList<>();
 
         int data = block.getData() % 4; //ignore "non-decay" and "check-decay" data.

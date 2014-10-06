@@ -8,10 +8,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-public class BlockDoubleSlab extends BlockType {
+public class BlockDoubleSlab extends BlockFeatureDrop {
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         return Collections.unmodifiableList(Arrays.asList(new ItemStack(Material.STEP, 2, block.getData())));
     }
 

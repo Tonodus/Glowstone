@@ -6,7 +6,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-public class BlockHay extends BlockType {
+public class BlockHay extends DefaultBlockTypeFeature {
 
     @Override
     public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {

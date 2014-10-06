@@ -12,17 +12,19 @@ import org.bukkit.util.Vector;
 public class BlockTorch extends BlockType {
 
     public BlockTorch() {
-        setDrops(new ItemStack(Material.TORCH));
+        super(new BlockDirectDrops(Material.TORCH), new TorchFeature());
     }
 
-    @Override
-    public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
-        super.placeBlock(player, state, face, holding, clickedLoc);
-        final MaterialData data = state.getData();
-        if (data instanceof Torch) {
-            ((Torch) data).setFacingDirection(face);
-        } else {
-            warnMaterialData(Torch.class, data);
+    private static class TorchFeature extends DefaultBlockTypeFeature {
+        @Override
+        public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
+            super.placeBlock(player, state, face, holding, clickedLoc);
+            final MaterialData data = state.getData();
+            if (data instanceof Torch) {
+                ((Torch) data).setFacingDirection(face);
+            } else {
+                warnMaterialData(Torch.class, data);
+            }
         }
     }
 }

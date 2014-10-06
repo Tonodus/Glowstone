@@ -8,7 +8,7 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.material.Stairs;
 import org.bukkit.util.Vector;
 
-public class BlockStairs extends BlockType {
+public class BlockStairs extends DefaultBlockTypeFeature {
 
     @Override
     public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {

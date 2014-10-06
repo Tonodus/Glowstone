@@ -9,11 +9,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
-public class BlockPumpkinStem extends BlockType {
+public class BlockPumpkinStem extends BlockFeatureDrop {
     private final Random random = new Random();
 
     @Override
-    public Collection<ItemStack> getDrops(GlowBlock block) {
+    public Collection<ItemStack> getBlockDrops(GlowBlock block) {
         return Collections.unmodifiableList(Arrays.asList(new ItemStack(Material.PUMPKIN_SEEDS, random.nextInt(4))));
     }
 }

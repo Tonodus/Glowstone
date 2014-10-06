@@ -1,5 +1,6 @@
 package net.glowstone.block.blocktype;
 
+import com.google.common.base.Optional;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.entity.GlowPlayer;
@@ -11,7 +12,7 @@ import org.bukkit.material.Step;
 import org.bukkit.material.WoodenStep;
 import org.bukkit.util.Vector;
 
-public class BlockSlab extends BlockType {
+public class BlockSlab extends DefaultBlockTypeFeature {
 
     @Override
     public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc) {
@@ -49,12 +50,12 @@ public class BlockSlab extends BlockType {
     }
 
     @Override
-    public boolean canOverride(GlowBlock block, BlockFace face, ItemStack holding) {
-        return matchingType(block, face, holding, true);
+    public Optional<Boolean> canOverride(GlowBlock block, BlockFace face, ItemStack holding) {
+        return Optional.of(matchingType(block, face, holding, true));
     }
 
     @Override
-    public boolean canAbsorb(GlowBlock block, BlockFace face, ItemStack holding) {
-        return matchingType(block, face, holding, false);
+    public Optional<Boolean> canAbsorb(GlowBlock block, BlockFace face, ItemStack holding) {
+        return Optional.of(matchingType(block, face, holding, false));
     }
 }

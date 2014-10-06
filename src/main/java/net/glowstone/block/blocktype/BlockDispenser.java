@@ -19,7 +19,7 @@ public class BlockDispenser extends BlockType {
         super(new BlockDirectDrops(Material.DISPENSER), new DispenserFeature());
     }
 
-    private static class DispenserFeature extends BlockContainer {
+    protected static class DispenserFeature extends BlockContainer {
         @Override
         public Optional<? extends TileEntity> createTileEntity(GlowChunk chunk, int cx, int cy, int cz) {
             return Optional.of(new TEDispenser(chunk.getBlock(cx, cy, cz)));
