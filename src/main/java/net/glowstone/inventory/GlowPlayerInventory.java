@@ -1,5 +1,7 @@
 package net.glowstone.inventory;
 
+import net.glowstone.block.ItemTable;
+import net.glowstone.block.itemtype.ItemType;
 import net.glowstone.entity.GlowHumanEntity;
 import net.glowstone.entity.GlowPlayer;
 import net.glowstone.net.message.play.inv.HeldItemMessage;
@@ -57,6 +59,7 @@ public class GlowPlayerInventory extends GlowInventory implements PlayerInventor
 
     /**
      * Get the crafting inventory.
+     *
      * @return The GlowCraftingInventory attached to this player
      */
     public GlowCraftingInventory getCraftingInventory() {
@@ -66,8 +69,31 @@ public class GlowPlayerInventory extends GlowInventory implements PlayerInventor
     public void setRawHeldItemSlot(int slot) {
         if (slot < 0 || slot > 8)
             throw new IllegalArgumentException(slot + " not in range 0..8");
+
+        ItemStack before = getItem(heldSlot);
+        ItemStack then = getItem(slot);
+        callHoldingItemChanges(before, then);
+
         heldSlot = slot;
-        setItemInHand(getItemInHand());  // send to player again just in case
+    }
+
+    private void callHoldingItemChanges(ItemStack before, ItemStack then) {
+        ItemTable it = ItemTable.instance();
+
+
+        if (before != null) {
+            ItemType type = it.getItem(before.getType());
+            if (type != null) {
+                type.onHide((GlowHumanEntity) super.getHolder(), before, then);
+            }
+        }
+
+        if (then != null) {
+            ItemType type = it.getItem(then.getType());
+            if (type != null) {
+                type.onShow((GlowHumanEntity) super.getHolder(), then, before);
+            }
+        }
     }
 
     @Override
@@ -87,6 +113,7 @@ public class GlowPlayerInventory extends GlowInventory implements PlayerInventor
 
     /**
      * Get the DragTracker associated with this player.
+     *
      * @return The DragTracker.
      */
     public DragTracker getDragTracker() {
@@ -106,6 +133,10 @@ public class GlowPlayerInventory extends GlowInventory implements PlayerInventor
         if (index >= SIZE) {
             armor[index - SIZE] = item;
         } else {
+            if (index == heldSlot) {
+                callHoldingItemChanges(getItem(heldSlot), item);
+            }
+
             super.setItem(index, item);
         }
     }

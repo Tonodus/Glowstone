@@ -9,6 +9,9 @@ import net.glowstone.entity.objects.GlowItem;
 import net.glowstone.io.WorldMetadataService.WorldFinalValues;
 import net.glowstone.io.WorldStorageProvider;
 import net.glowstone.io.anvil.AnvilWorldStorageProvider;
+import net.glowstone.map.AnvilWorldMapManager;
+import net.glowstone.map.MapManager;
+import net.glowstone.io.MapIOService;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -35,6 +38,7 @@ import java.util.logging.Level;
 
 /**
  * A class which represents the in-game world.
+ *
  * @author Graham Edgecombe
  */
 public final class GlowWorld implements World {
@@ -215,7 +219,13 @@ public final class GlowWorld implements World {
     private int monsterLimit, animalLimit, waterAnimalLimit, ambientLimit;
 
     /**
+     * The world's {@link net.glowstone.map.MapManager}.
+     */
+    private final MapManager mapManager;
+
+    /**
      * Creates a new world from the options in the given WorldCreator.
+     *
      * @param server The server for the world.
      * @param creator The WorldCreator to use.
      */
@@ -313,6 +323,9 @@ public final class GlowWorld implements World {
             }
         }
         server.getLogger().info("Preparing spawn for " + name + ": done");
+        MapIOService mapIOService = storageProvider.getMapIoService();
+        this.mapManager = new AnvilWorldMapManager(this);
+        mapIOService.load(mapManager);
         EventFactory.callEvent(new WorldLoadEvent(this));
     }
 
@@ -328,6 +341,7 @@ public final class GlowWorld implements World {
 
     /**
      * Get the world chunk manager.
+     *
      * @return The ChunkManager for the world.
      */
     public ChunkManager getChunkManager() {
@@ -336,6 +350,7 @@ public final class GlowWorld implements World {
 
     /**
      * Get the world's parent server.
+     *
      * @return The GlowServer for the world.
      */
     public GlowServer getServer() {
@@ -344,6 +359,7 @@ public final class GlowWorld implements World {
 
     /**
      * Get a new chunk lock object a player or other party can use to keep chunks loaded.
+     *
      * @return The ChunkLock.
      */
     public ChunkManager.ChunkLock newChunkLock(String desc) {
@@ -423,6 +439,7 @@ public final class GlowWorld implements World {
 
     /**
      * Gets the entity manager.
+     *
      * @return The entity manager.
      */
     public EntityManager getEntityManager() {
@@ -431,6 +448,10 @@ public final class GlowWorld implements World {
 
     public Collection<GlowPlayer> getRawPlayers() {
         return entities.getAll(GlowPlayer.class);
+    }
+
+    public MapManager getMapManager() {
+        return mapManager;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -712,6 +733,14 @@ public final class GlowWorld implements World {
         for (GlowPlayer player : getRawPlayers()) {
             player.saveData(async);
         }
+
+        //save maps
+        maybeAsync(async, new Runnable() {
+            @Override
+            public void run() {
+                storageProvider.getMapIoService().save(mapManager);
+            }
+        });
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1379,6 +1408,7 @@ public final class GlowWorld implements World {
 
     /**
      * Save the world data using the metadata service.
+     *
      * @param async Whether to write asynchronously.
      */
     private void writeWorldData(boolean async) {
@@ -1397,6 +1427,7 @@ public final class GlowWorld implements World {
 
     /**
      * Execute a runnable, optionally asynchronously.
+     *
      * @param async Whether to run the runnable in an asynchronous task.
      * @param runnable The runnable to run.
      */
@@ -1410,6 +1441,7 @@ public final class GlowWorld implements World {
 
     /**
      * Unloads the world
+     *
      * @return true if successful
      */
     public boolean unload() {
@@ -1424,6 +1456,7 @@ public final class GlowWorld implements World {
 
     /**
      * Get the storage provider for the world.
+     *
      * @return The {@link WorldStorageProvider}.
      */
     public WorldStorageProvider getStorage() {
@@ -1432,6 +1465,7 @@ public final class GlowWorld implements World {
 
     /**
      * Get the world folder.
+     *
      * @return world folder
      */
     @Override

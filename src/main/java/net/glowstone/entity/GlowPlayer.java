@@ -15,6 +15,8 @@ import net.glowstone.entity.meta.MetadataMap;
 import net.glowstone.entity.meta.PlayerProfile;
 import net.glowstone.inventory.InventoryMonitor;
 import net.glowstone.io.PlayerDataService;
+import net.glowstone.map.GlowMapView;
+import net.glowstone.map.MapRenderData;
 import net.glowstone.net.GlowSession;
 import net.glowstone.net.message.login.LoginSuccessMessage;
 import net.glowstone.net.message.play.entity.DestroyEntitiesMessage;
@@ -54,6 +56,7 @@ import java.util.logging.Level;
 
 /**
  * Represents an in-game player.
+ *
  * @author Graham Edgecombe
  */
 @DelegateDeserialization(GlowOfflinePlayer.class)
@@ -68,6 +71,11 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
      * This player's session.
      */
     private final GlowSession session;
+
+    /**
+     * The map that should be rendered continuously, or null
+     */
+    private GlowMapView showingMap = null;
 
     /**
      * The entities that the client knows about.
@@ -242,6 +250,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Creates a new player and adds it to the world.
+     *
      * @param session The player's session.
      * @param profile The player's profile with name and UUID information.
      * @param reader The PlayerReader to be used to initialize the player.
@@ -309,6 +318,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     /**
      * Read the location from a PlayerReader for entity initialization. Will
      * fall back to a reasonable default rather than returning null.
+     *
      * @param session The player's session.
      * @param reader The PlayerReader to get the location from.
      * @return The location to spawn the player.
@@ -331,8 +341,17 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     ////////////////////////////////////////////////////////////////////////////
     // Internals
 
+    public void stopMapShowing() {
+        showingMap = null;
+    }
+
+    public void startMapShowing(short id) {
+        showingMap = (GlowMapView) Bukkit.getMap(id);
+    }
+
     /**
      * Get the network session attached to this player.
+     *
      * @return The GlowSession of the player.
      */
     public GlowSession getSession() {
@@ -341,6 +360,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Get the join time in milliseconds, to be saved as last played time.
+     *
      * @return The player's join time.
      */
     public long getJoinTime() {
@@ -420,6 +440,11 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
                     session.send(msg);
                 }
             }
+        }
+
+        // display map
+        if (showingMap != null) {
+            sendMap(showingMap);
         }
     }
 
@@ -568,6 +593,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     /**
      * Spawn the player at the given location after they have already joined.
      * Used for changing worlds and respawning after death.
+     *
      * @param location The location to place the player.
      */
     private void spawnAt(Location location) {
@@ -624,6 +650,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Checks whether the player can see the given chunk.
+     *
      * @return If the chunk is known to the player's client.
      */
     public boolean canSee(GlowChunk.Key chunk) {
@@ -632,6 +659,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Checks whether the player can see the given entity.
+     *
      * @return If the entity is known to the player's client.
      */
     public boolean canSee(GlowEntity entity) {
@@ -640,6 +668,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Open the sign editor interface at the specified location.
+     *
      * @param loc The location to open the editor at
      */
     public void openSignEditor(Location loc) {
@@ -653,6 +682,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     /**
      * Check that the specified location matches that of the last opened sign
      * editor, and if so, clears the last opened sign editor.
+     *
      * @param loc The location to check
      * @return Whether the location matched.
      */
@@ -667,6 +697,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Get a UserListItemMessage entry representing adding this player.
+     *
      * @return The entry (action ADD_PLAYER) with this player's information.
      */
     public UserListItemMessage.Entry getUserListEntry() {
@@ -689,6 +720,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Set the client settings for this player.
+     *
      * @param settings The new client settings.
      */
     public void setSettings(ClientSettings settings) {
@@ -698,6 +730,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Get this player's client settings.
+     *
      * @return The player's client settings.
      */
     public ClientSettings getSettings() {
@@ -1122,6 +1155,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Teleport the player.
+     *
      * @param location The destination to teleport to.
      * @return Whether the teleport was a success.
      */
@@ -1190,6 +1224,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Says a message (or runs a command).
+     *
      * @param text message sent by the player.
      * @param async whether the message was received asynchronously.
      */
@@ -1359,7 +1394,18 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     @Override
     public void sendMap(MapView map) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        GlowMapView mapView = (GlowMapView) map;
+
+        MapRenderData data = mapView.render(this);
+
+        Iterable<MapDataMessage.Section> sections = data.getSections();
+        List<MapDataMessage.Icon> icons = data.getIcons();
+
+        //TODO
+        for (MapDataMessage.Section section : sections) {
+            MapDataMessage message = new MapDataMessage(map.getId(), map.getScale().getValue(), icons, section);
+            session.send(message);
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1678,6 +1724,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Add a listening channel to this player.
+     *
      * @param channel The channel to add.
      */
     public void addChannel(String channel) {
@@ -1688,6 +1735,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     /**
      * Remove a listening channel from this player.
+     *
      * @param channel The channel to remove.
      */
     public void removeChannel(String channel) {

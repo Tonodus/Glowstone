@@ -11,6 +11,7 @@ import net.glowstone.inventory.GlowInventory;
 import net.glowstone.inventory.GlowItemFactory;
 import net.glowstone.io.PlayerDataService;
 import net.glowstone.map.GlowMapView;
+import net.glowstone.map.MapManager;
 import net.glowstone.net.GlowNetworkServer;
 import net.glowstone.net.SessionRegistry;
 import net.glowstone.scheduler.GlowScheduler;
@@ -50,6 +51,7 @@ import java.util.logging.Logger;
 
 /**
  * The core class of the Glowstone server.
+ *
  * @author Graham Edgecombe
  */
 public final class GlowServer implements Server {
@@ -72,6 +74,7 @@ public final class GlowServer implements Server {
     /**
      * Creates a new server on TCP port 25565 and starts listening for
      * connections.
+     *
      * @param args The command-line arguments.
      */
     public static void main(String[] args) {
@@ -523,6 +526,7 @@ public final class GlowServer implements Server {
 
     /**
      * Enable all plugins of the given load order type.
+     *
      * @param type The type of plugin to enable.
      */
     private void enablePlugins(PluginLoadOrder type) {
@@ -606,6 +610,7 @@ public final class GlowServer implements Server {
 
     /**
      * Gets the command map.
+     *
      * @return The {@link SimpleCommandMap}.
      */
     public SimpleCommandMap getCommandMap() {
@@ -614,6 +619,7 @@ public final class GlowServer implements Server {
 
     /**
      * Gets the session registry.
+     *
      * @return The {@link SessionRegistry}.
      */
     public SessionRegistry getSessionRegistry() {
@@ -643,6 +649,7 @@ public final class GlowServer implements Server {
 
     /**
      * Return the crafting manager.
+     *
      * @return The server's crafting manager.
      */
     public CraftingManager getCraftingManager() {
@@ -651,6 +658,7 @@ public final class GlowServer implements Server {
 
     /**
      * The key pair generated at server start up
+     *
      * @return The key pair generated at server start up
      */
     public KeyPair getKeyPair() {
@@ -659,6 +667,7 @@ public final class GlowServer implements Server {
 
     /**
      * Returns the player data service attached to the first world.
+     *
      * @return The server's player data service.
      */
     public PlayerDataService getPlayerDataService() {
@@ -667,6 +676,7 @@ public final class GlowServer implements Server {
 
     /**
      * Get the threshold to use for network compression defined in the config.
+     *
      * @return The compression threshold, or -1 for no compression.
      */
     public int getCompressionThreshold() {
@@ -675,6 +685,7 @@ public final class GlowServer implements Server {
 
     /**
      * Get the default game difficulty defined in the config.
+     *
      * @return The default difficulty.
      */
     public Difficulty getDifficulty() {
@@ -687,6 +698,7 @@ public final class GlowServer implements Server {
 
     /**
      * Get whether worlds should keep their spawns loaded by default.
+     *
      * @return Whether to keep spawns loaded by default.
      */
     public boolean keepSpawnLoaded() {
@@ -695,6 +707,7 @@ public final class GlowServer implements Server {
 
     /**
      * Get whether parsing of data provided by a proxy is enabled.
+     *
      * @return True if a proxy is providing data to use.
      */
     public boolean getProxySupport() {
@@ -1052,6 +1065,7 @@ public final class GlowServer implements Server {
 
     /**
      * Gets the default ChunkGenerator for the given environment and type.
+     *
      * @return The ChunkGenerator.
      */
     private ChunkGenerator getGenerator(String name, Environment environment, WorldType type) {
@@ -1092,6 +1106,7 @@ public final class GlowServer implements Server {
 
     /**
      * Add a world to the internal world collection.
+     *
      * @param world The world to add.
      */
     void addWorld(GlowWorld world) {
@@ -1121,14 +1136,28 @@ public final class GlowServer implements Server {
         return false;
     }
 
+    public <I> GlowMapView getMap(MapManager<I> mapManager, I id) {
+        try {
+            return mapManager.getMap(id);
+        } catch (IllegalArgumentException e) {
+            //return null if map does not exists
+            return null;
+        }
+    }
+
+    public GlowMapView getMap(GlowWorld world, short id) {
+        return getMap(world.getMapManager(), id);
+    }
+
     @Override
     public GlowMapView getMap(short id) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getMap((GlowWorld) getWorlds().get(0), id);
     }
 
     @Override
     public GlowMapView createMap(World world) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        GlowWorld glowWorld = (GlowWorld) world;
+        return glowWorld.getMapManager().createNewMap();
     }
 
     ////////////////////////////////////////////////////////////////////////////

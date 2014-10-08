@@ -4,14 +4,17 @@ import net.glowstone.GlowWorld;
 import net.glowstone.io.ChunkIoService;
 import net.glowstone.io.PlayerDataService;
 import net.glowstone.io.WorldMetadataService;
+import net.glowstone.io.anvil.AnvilChunkIoService;
 import net.glowstone.io.WorldStorageProvider;
 import net.glowstone.io.nbt.NbtPlayerDataService;
 import net.glowstone.io.nbt.NbtWorldMetadataService;
+import net.glowstone.io.anvil.AnvilMapIOService;
+import net.glowstone.io.MapIOService;
 
 import java.io.File;
 
 /**
- * A {@link WorldStorageProvider} for the Anvil map format.
+ * A {@link net.glowstone.io.WorldStorageProvider} for the Anvil map format.
  */
 public class AnvilWorldStorageProvider implements WorldStorageProvider {
 
@@ -20,6 +23,7 @@ public class AnvilWorldStorageProvider implements WorldStorageProvider {
     private AnvilChunkIoService service;
     private NbtWorldMetadataService meta;
     private PlayerDataService players;
+    private MapIOService mapIoService;
 
     public AnvilWorldStorageProvider(File dir) {
         this.dir = dir;
@@ -32,6 +36,7 @@ public class AnvilWorldStorageProvider implements WorldStorageProvider {
         this.world = world;
         service = new AnvilChunkIoService(dir);
         meta = new NbtWorldMetadataService(world, dir);
+        this.mapIoService = new AnvilMapIOService(new File(dir, "data"));
     }
 
     @Override
@@ -55,5 +60,10 @@ public class AnvilWorldStorageProvider implements WorldStorageProvider {
             players = new NbtPlayerDataService(world.getServer(), new File(dir, "playerdata"));
         }
         return players;
+    }
+
+    @Override
+    public MapIOService getMapIoService() {
+        return mapIoService;
     }
 }

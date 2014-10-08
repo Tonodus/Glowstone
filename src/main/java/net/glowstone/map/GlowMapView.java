@@ -15,16 +15,16 @@ import java.util.Map;
  * Represents a map item.
  */
 public final class GlowMapView implements MapView {
-    
-    //private final Map<GlowPlayer, RenderData> renderCache = new HashMap<GlowPlayer, RenderData<>();
+
+    private final Map<GlowPlayer, MapRenderData> renderCache = new HashMap<>();
     private final List<MapRenderer> renderers = new ArrayList<>();
     private final Map<MapRenderer, Map<GlowPlayer, GlowMapCanvas>> canvases = new HashMap<>();
-    private final short id;
+    private short id;
     private Scale scale;
     private int x, z;
     private GlowWorld world;
-    
-    protected GlowMapView(GlowWorld world, short id) {
+
+    public GlowMapView(GlowWorld world, short id) {
         this.world = world;
         this.id = id;
         this.x = world.getSpawnLocation().getBlockX();
@@ -33,14 +33,69 @@ public final class GlowMapView implements MapView {
         addRenderer(new GlowMapRenderer(this));
     }
 
+    public GlowMapView(GlowWorld world, short id, byte[] base) {
+        this(world, id);
+        MapRenderData data = new MapRenderData();
+        data.fill(base);
+        renderCache.put(null, data);
+    }
+
+    //////////////////////////////////////////
+    // Rendering
+
+    private boolean isContextual() {
+        for (MapRenderer renderer : renderers)
+            if (renderer.isContextual())
+                return true;
+
+        return false;
+    }
+
+    public MapRenderData render(GlowPlayer player) {
+        boolean isContextual = isContextual();
+        GlowPlayer playerOrNull = isContextual ? player : null;
+
+        MapRenderData data = renderCache.get(playerOrNull);
+
+        if (data == null) {
+            data = new MapRenderData();
+            renderCache.put(playerOrNull, data);
+        }
+
+        if (isContextual && renderCache.containsKey(null))
+            renderCache.remove(null);
+
+        data.clear();
+        for (MapRenderer renderer : renderers) {
+            GlowMapCanvas canvas = canvases.get(renderer).get(playerOrNull);
+            if (canvas == null) {
+                canvas = new GlowMapCanvas(this);
+                canvases.get(renderer).put(playerOrNull, canvas);
+            }
+
+            data.render(renderer, canvas, player);
+        }
+
+        return data;
+    }
+
+    ///////////////////////////////////////////
     @Override
     public short getId() {
         return id;
     }
 
+    public void setId(short id) {
+        this.id = id;
+    }
+
     @Override
     public boolean isVirtual() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (renderers.size() > 0) {
+            return !(renderers.get(0) instanceof GlowMapRenderer);
+        }
+
+        return false;
     }
 
     @Override
@@ -110,5 +165,5 @@ public final class GlowMapView implements MapView {
             return false;
         }
     }
-    
+
 }

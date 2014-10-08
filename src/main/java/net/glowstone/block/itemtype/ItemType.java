@@ -3,6 +3,7 @@ package net.glowstone.block.itemtype;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.ItemTable;
 import net.glowstone.block.blocktype.BlockType;
+import net.glowstone.entity.GlowHumanEntity;
 import net.glowstone.entity.GlowPlayer;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -41,6 +42,7 @@ public class ItemType {
 
     /**
      * Get the id assigned to this ItemType.
+     *
      * @return The corresponding id.
      */
     public final int getId() {
@@ -49,6 +51,7 @@ public class ItemType {
 
     /**
      * Get the Material assigned to this ItemType.
+     *
      * @return The corresponding Material.
      */
     public final Material getMaterial() {
@@ -60,6 +63,7 @@ public class ItemType {
 
     /**
      * Set the maximum stack size of the item.
+     *
      * @param maxStackSize The new maximum stack size.
      */
     protected final void setMaxStackSize(int maxStackSize) {
@@ -68,6 +72,7 @@ public class ItemType {
 
     /**
      * Set this item to act like the given block type when being placed.
+     *
      * @param placeAs The block to place as.
      */
     protected final void setPlaceAs(BlockType placeAs) {
@@ -76,6 +81,7 @@ public class ItemType {
 
     /**
      * Set this item to act like the given block type when being placed.
+     *
      * @param placeAs The material to place as.
      */
     protected final void setPlaceAs(Material placeAs) {
@@ -94,6 +100,7 @@ public class ItemType {
 
     /**
      * Get the maximum stack size of the item.
+     *
      * @return The maximum stack size.
      */
     public int getMaxStackSize() {
@@ -106,6 +113,7 @@ public class ItemType {
     /**
      * Called when a player right-clicks in midair while holding this item.
      * Also called by default if rightClickBlock is not overridden.
+     *
      * @param player The player
      * @param holding The ItemStack the player was holding
      */
@@ -115,6 +123,7 @@ public class ItemType {
 
     /**
      * Called when a player right-clicks on a block while holding this item.
+     *
      * @param player The player
      * @param target The block the player right-clicked
      * @param face The face on which the click occurred
@@ -127,6 +136,28 @@ public class ItemType {
         } else {
             rightClickAir(player, holding);
         }
+    }
+
+    /**
+     * Called when this item will be not longer in the player's hand.
+     *
+     * @param player The player changing his holding item
+     * @param me The ItemStack not in the player's hand anymore
+     * @param nowHolding The new ItemStack in the player's hand or null (fist)
+     */
+    public void onHide(GlowHumanEntity player, ItemStack me, ItemStack nowHolding) {
+
+    }
+
+    /**
+     * Called when the player will hold this item in his hand.
+     *
+     * @param player The player holding this item in his hand
+     * @param me The ItemStack the player's holding
+     * @param before The ItemStack that was in the player's hand before
+     */
+    public void onShow(GlowHumanEntity player, ItemStack me, ItemStack before) {
+
     }
 
     ////////////////////////////////////////////////////////////////////////////
