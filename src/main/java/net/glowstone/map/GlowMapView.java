@@ -2,9 +2,13 @@ package net.glowstone.map;
 
 import net.glowstone.GlowWorld;
 import net.glowstone.entity.GlowPlayer;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +19,7 @@ import java.util.Map;
  * Represents a map item.
  */
 public final class GlowMapView implements MapView {
+    private static final int MAP_SIZE = GlowMapCanvas.MAP_SIZE;
 
     private final Map<GlowPlayer, MapRenderData> renderCache = new HashMap<>();
     private final List<MapRenderer> renderers = new ArrayList<>();
@@ -79,7 +84,55 @@ public final class GlowMapView implements MapView {
         return data;
     }
 
+    public byte[] getScaledLocation(Location location) {
+        return getScaledLocation(location.getBlockX(), location.getBlockZ());
+    }
+
+    public byte[] getScaledLocation(Vector vector) {
+        return getScaledLocation(vector.getBlockX(), vector.getBlockZ());
+    }
+
+    private byte[] getScaledLocation(int x, int z) {
+        int offX = x - this.x, offZ = z - this.z;
+
+        int div = getDivForScale(scale);
+        offX /= div;
+        offZ /= div;
+
+
+        offX += MAP_SIZE / 2;
+        offZ += MAP_SIZE / 2;
+        if (offX >= 0 && offX < MAP_SIZE && offZ >= 0 && offZ < MAP_SIZE) {
+            return new byte[]{(byte) offX, (byte) offZ};
+        } else {
+            return new byte[0];
+        }
+    }
+
+    private static int getDivForScale(MapView.Scale scale) {
+        switch (scale) {
+            case CLOSEST:
+                return 1;
+            case CLOSE:
+                return 2;
+            case NORMAL:
+                return 4;
+            case FAR:
+                return 8;
+            case FARTHEST:
+                return 16;
+        }
+
+        throw new IllegalArgumentException("Invalid scale " + scale);
+    }
+
+    public boolean is(ItemStack item) {
+        return item.getType() == Material.MAP && item.getDurability() == id;
+    }
+
     ///////////////////////////////////////////
+    //
+
     @Override
     public short getId() {
         return id;

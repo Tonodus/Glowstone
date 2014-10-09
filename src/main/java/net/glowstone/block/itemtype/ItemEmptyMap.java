@@ -14,7 +14,7 @@ public class ItemEmptyMap extends ItemType {
         //Create the new map
         MapView newMap = Bukkit.createMap(player.getLocation().getWorld());
         setCenter(player.getLocation(), newMap);
-        newMap.setScale(MapView.Scale.NORMAL);
+        newMap.setScale(MapView.Scale.CLOSEST);
 
         //Call event
         MapInitializeEvent event = new MapInitializeEvent(newMap);
