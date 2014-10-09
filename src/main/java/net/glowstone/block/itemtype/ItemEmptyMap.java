@@ -3,6 +3,7 @@ package net.glowstone.block.itemtype;
 import net.glowstone.EventFactory;
 import net.glowstone.entity.GlowPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -12,8 +13,7 @@ public class ItemEmptyMap extends ItemType {
     public void rightClickAir(GlowPlayer player, ItemStack holding) {
         //Create the new map
         MapView newMap = Bukkit.createMap(player.getLocation().getWorld());
-        newMap.setCenterX(player.getLocation().getBlockX());
-        newMap.setCenterZ(player.getLocation().getBlockZ());
+        setCenter(player.getLocation(), newMap);
         newMap.setScale(MapView.Scale.NORMAL);
 
         //Call event
@@ -31,5 +31,15 @@ public class ItemEmptyMap extends ItemType {
         holding.setAmount(1);
         holding.setType(Material.MAP);
         holding.setDurability(newMap.getId());
+    }
+
+    private static void setCenter(Location origin, MapView map) {
+        float x = origin.getBlockX(), z = origin.getBlockZ();
+
+        x = Math.round(x % 128f) * 128;
+        z = Math.round(z % 128f) * 128;
+
+        map.setCenterX((int) x);
+        map.setCenterZ((int) z);
     }
 }
