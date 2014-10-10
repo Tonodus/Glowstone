@@ -58,7 +58,11 @@ public class AnvilMapSaver {
 
     private void saveMapToCompound(GlowMapView map, CompoundTag main) {
         CompoundTag data = new CompoundTag();
-        data.putByteArray("colors", new byte[128 * 128]); //TODO
+        byte[] colors = map.getBase();
+        if (colors == null)
+            data.putByteArray("colors", new byte[128 * 128]); //TODO: Empty array? No value?
+        else
+            data.putByteArray("colors", colors);
         data.putByte("dimension", 0); //TODO
         data.putShort("height", 128);
         data.putByte("scale", map.getScale().getValue());

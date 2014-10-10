@@ -50,6 +50,10 @@ public class MapRenderData {
             this.cursors.add(cursors.getCursor(i));
     }
 
+    byte[] getBuffer() {
+        return this.buffer;
+    }
+
     public Iterable<MapDataMessage.Section> getSections() {
         //TODO
         MapDataMessage.Section section = new MapDataMessage.Section(128, 128, 0, 0, buffer);

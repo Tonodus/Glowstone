@@ -103,5 +103,6 @@ public class AnvilMapLoader {
         mapView.setCenterX(xCenter);
         mapView.setCenterZ(zCenter);
         mapView.setScale(MapView.Scale.valueOf(byteScale));
+        mapView.setBase(colors);
     }
 }

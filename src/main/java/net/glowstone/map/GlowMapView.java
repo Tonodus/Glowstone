@@ -38,13 +38,35 @@ public final class GlowMapView implements MapView {
         addRenderer(new GlowMapRenderer(this));
     }
 
-    public GlowMapView(GlowWorld world, short id, byte[] base) {
-        this(world, id);
-        MapRenderData data = new MapRenderData();
-        data.fill(base);
-        renderCache.put(null, data);
+    public void setBase(byte[] base) {
+        if (isVirtual()) return;
+
+        //Get the GlowMapRender canvas-map
+        Map<GlowPlayer, GlowMapCanvas> canvasMap = canvases.get(renderers.get(0));
+        if (canvasMap == null) {
+            canvasMap = new HashMap<>();
+            canvases.put(renderers.get(0), canvasMap);
+        }
+
+        //Get the canvas for ever player (null)
+        GlowMapCanvas canvas = canvasMap.get(null);
+        if (canvas == null) {
+            canvas = new GlowMapCanvas(this);
+            canvasMap.put(null, canvas);
+        }
+
+        //Set the base
+        canvas.setBase(base);
     }
 
+    public byte[] getBase() {
+        MapRenderData renderData = renderCache.get(null);
+        if (renderData != null) {
+            return renderData.getBuffer();
+        }
+
+        return null;
+    }
     //////////////////////////////////////////
     // Rendering
 
