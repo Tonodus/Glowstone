@@ -8,10 +8,11 @@ import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 
 public class BlockTNT extends BlockType {
+
     public void explodeBlock(GlowBlock tntBlock, boolean ignitedByExplosion) {
         tntBlock.setType(Material.AIR);
         World world = tntBlock.getWorld();
-        GlowTNTPrimed tnt = (GlowTNTPrimed) world.spawnEntity(tntBlock.getLocation(), EntityType.PRIMED_TNT);
+        GlowTNTPrimed tnt = (GlowTNTPrimed) world.spawnEntity(tntBlock.getLocation().add(0.5, 0, 0.5), EntityType.PRIMED_TNT);
         tnt.setIgnitedByExplosion(ignitedByExplosion);
         world.playSound(tntBlock.getLocation(), Sound.FUSE, 1, 1);
     }

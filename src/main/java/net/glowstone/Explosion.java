@@ -48,20 +48,37 @@ public class Explosion {
      *
      * @param source The entity causing this explosion
      * @param world The world this explosion is in
-     * @param x
-     * @param y
-     * @param z
+     * @param x The X location of the explosion
+     * @param y The Y location of the explosion
+     * @param z The Z location of the explosion
      * @param power The power of the explosion
-     * @param incendiary true if this explosion should set blocks on fire
-     * @param breakBlocks whether blocks should break through this explosion
+     * @param incendiary Whether or not blocks should be set on fire
+     * @param breakBlocks Whether blocks should break through this explosion
      */
     public Explosion(Entity source, GlowWorld world, double x, double y, double z, float power, boolean incendiary, boolean breakBlocks) {
+        this(source, new Location(world, x, y, z), power, incendiary, breakBlocks);
+    }
+
+    /**
+     * Creates a new explosion
+     *
+     * @param source The entity causing this explosion
+     * @param location The location this explosion is occuring at. Must contain a GlowWorld
+     * @param power The power of the explosion
+     * @param incendiary Whether or not blocks should be set on fire
+     * @param breakBlocks Whether blocks should break through this explosion
+     */
+    public Explosion(Entity source, Location location, float power, boolean incendiary, boolean breakBlocks) {
+        if (!(location.getWorld() instanceof GlowWorld)) {
+            throw new IllegalArgumentException("Supplied location does not have a valid GlowWorld");
+        }
+
         this.source = source;
-        this.location = new Location(world, x, y, z);
+        this.location = location.clone();
         this.power = power;
         this.incendiary = incendiary;
         this.breakBlocks = breakBlocks;
-        this.world = world;
+        this.world = (GlowWorld) location.getWorld();
         itemTable = ItemTable.instance();
     }
 
@@ -72,7 +89,6 @@ public class Explosion {
         Set<BlockVector> droppedBlocks = calculateBlocks();
 
         EntityExplodeEvent event = EventFactory.callEvent(new EntityExplodeEvent(source, location, toBlockList(droppedBlocks), yield));
-
         if (event.isCancelled()) return false;
 
         this.yield = event.getYield();
