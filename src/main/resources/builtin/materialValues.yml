@@ -57,6 +57,7 @@ values:
     hardness: 50
     blastResistance: 6000
   TORCH:
+    hardness: 0
   FIRE:
   MOB_SPAWNER:
   WOOD_STAIRS:
