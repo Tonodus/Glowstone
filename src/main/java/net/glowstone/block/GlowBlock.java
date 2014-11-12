@@ -1,12 +1,10 @@
 package net.glowstone.block;
 
 import net.glowstone.GlowChunk;
-import net.glowstone.GlowServer;
 import net.glowstone.GlowWorld;
 import net.glowstone.block.entity.TileEntity;
 import net.glowstone.entity.GlowPlayer;
 import net.glowstone.net.message.play.game.BlockChangeMessage;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
@@ -20,7 +18,6 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -310,14 +307,18 @@ public final class GlowBlock implements Block {
     // Drops and breaking
 
     public boolean breakNaturally(float yield) {
-        Random r = new Random();
-
+        return breakNaturally(null, yield);    
+    }
+    
+    public boolean breakNaturally(ItemStack tool, float yield) {
         if (getType() == Material.AIR) {
             return false;
         }
 
+        Random r = new Random();
+        
         Location location = getLocation();
-        for (ItemStack stack : getDrops()) {
+        for (ItemStack stack : getDrops(tool)) {
             if (r.nextFloat() < yield) {
                 getWorld().dropItemNaturally(location, stack);
             }
@@ -326,37 +327,25 @@ public final class GlowBlock implements Block {
         setType(Material.AIR);
         return true;
     }
-
+    
     @Override
     public boolean breakNaturally() {
-        return breakNaturally(1.0f);
+        return breakNaturally(null);
     }
 
     @Override
     public boolean breakNaturally(ItemStack tool) {
-        if (givesDrops(tool)) {
-            return breakNaturally();
-        } else {
-            return setTypeId(Material.AIR.getId());
-        }
+       return breakNaturally(tool, 1.0f);
     }
 
     @Override
     public Collection<ItemStack> getDrops() {
-        return ItemTable.instance().getBlock(getType()).getDrops(this);
+        return getDrops(null);
     }
 
     @Override
     public Collection<ItemStack> getDrops(ItemStack tool) {
-        if (givesDrops(tool)) {
-            return getDrops();
-        } else {
-            return Collections.emptyList();
-        }
-    }
-
-    private boolean givesDrops(ItemStack tool) {
-        return true;
+        return ItemTable.instance().getBlock(getType()).getDrops(this, tool);
     }
 
     ////////////////////////////////////////////////////////////////////////////

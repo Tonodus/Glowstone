@@ -184,6 +184,16 @@ public final class GlowWorld implements World {
     private int thunderingTicks = 0;
 
     /**
+     * The rain density on the current world tick.
+     */
+    private float currentRainDensity = 0;
+
+    /**
+     * The sky darkness on the current world tick.
+     */
+    private float currentSkyDarkness = 0;
+
+    /**
      * The age of the world, in ticks.
      */
     private long worldAge = 0;
@@ -403,6 +413,8 @@ public final class GlowWorld implements World {
             if (--thunderingTicks <= 0) {
                 setThundering(!currentlyThundering);
             }
+
+            updateWeather();
 
             if (currentlyRaining && currentlyThundering) {
                 if (random.nextDouble() < .01) {
@@ -1062,7 +1074,7 @@ public final class GlowWorld implements World {
     }
 
     private GlowLightningStrike strikeLightningFireEvent(final Location loc, final boolean effect) {
-        final GlowLightningStrike strike = new GlowLightningStrike(loc, effect);
+        final GlowLightningStrike strike = new GlowLightningStrike(loc, effect, random);
         final LightningStrikeEvent event = new LightningStrikeEvent(this, strike);
         if (EventFactory.callEvent(event).isCancelled()) {
             return null;
@@ -1124,6 +1136,7 @@ public final class GlowWorld implements World {
         }
 
         // change weather
+        boolean previouslyRaining = currentlyRaining;
         currentlyRaining = hasStorm;
 
         // Numbers borrowed from CraftBukkit.
@@ -1134,8 +1147,10 @@ public final class GlowWorld implements World {
         }
 
         // update players
-        for (GlowPlayer player : getRawPlayers()) {
-            player.sendWeather();
+        if (previouslyRaining != currentlyRaining) {
+            for (GlowPlayer player : getRawPlayers()) {
+                player.sendWeather();
+            }
         }
     }
 
@@ -1181,6 +1196,35 @@ public final class GlowWorld implements World {
     @Override
     public void setThunderDuration(int duration) {
         thunderingTicks = duration;
+    }
+
+    public float getRainDensity() {
+        return currentRainDensity;
+    }
+
+    public float getSkyDarkness() {
+        return currentSkyDarkness;
+    }
+
+    private void updateWeather() {
+        final float previousRainDensity = currentRainDensity;
+        final float previousSkyDarkness = currentSkyDarkness;
+        final float rainDensityModifier = currentlyRaining ? .01F : -.01F;
+        final float skyDarknessModifier = currentlyThundering ? .01F : -.01F;
+        currentRainDensity = Math.max(0, Math.min(1, previousRainDensity + rainDensityModifier));
+        currentSkyDarkness = Math.max(0, Math.min(1, previousSkyDarkness + skyDarknessModifier));
+
+        if (previousRainDensity != currentRainDensity) {
+            for (GlowPlayer player : getRawPlayers()) {
+                player.sendRainDensity();
+            }
+        }
+
+        if (previousSkyDarkness != currentSkyDarkness) {
+            for (GlowPlayer player : getRawPlayers()) {
+                player.sendSkyDarkness();
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1256,7 +1300,7 @@ public final class GlowWorld implements World {
     public void playSound(Location location, Sound sound, float volume, float pitch) {
         if (location == null || sound == null) return;
 
-        final double radiusSquared = Math.pow(Math.min(volume * 16, 16), 2);
+        final double radiusSquared = Math.pow(volume * 16, 2);
         for (Player player : getRawPlayers()) {
             if (player.getLocation().distanceSquared(location) <= radiusSquared) {
                 player.playSound(location, sound, volume, pitch);
