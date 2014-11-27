@@ -62,7 +62,16 @@ class GlowMetaItem implements ItemMeta {
         if (hasLore()) {
             result.put("lore", getLore());
         }
-        // todo: enchantments
+
+        if (hasEnchants()) {
+            Map<String, Object> enchants = new HashMap<>();
+
+            for (Map.Entry<Enchantment, Integer> enchantment : getEnchants().entrySet()) {
+                enchants.put(enchantment.getKey().getName(), enchantment.getValue());
+            }
+
+            result.put("enchants", enchants);
+        }
 
         return result;
     }
@@ -80,7 +89,18 @@ class GlowMetaItem implements ItemMeta {
             tag.putCompound("display", displayTags);
         }
 
-        // todo: enchantments
+        if (hasEnchants()) {
+            List<CompoundTag> ench = new ArrayList<>();
+
+            for (Map.Entry<Enchantment, Integer> enchantment : getEnchants().entrySet()) {
+                CompoundTag enchantmentTag = new CompoundTag();
+                enchantmentTag.putShort("id", enchantment.getKey().getId());
+                enchantmentTag.putShort("lvl", enchantment.getValue());
+                ench.add(enchantmentTag);
+            }
+
+            tag.putCompoundList("ench", ench);
+        }
     }
 
     void readNbt(CompoundTag tag) {
@@ -94,7 +114,19 @@ class GlowMetaItem implements ItemMeta {
             }
         }
 
-        // todo: enchantments
+        if (tag.isList("ench", TagType.COMPOUND)) {
+            Iterable<CompoundTag> enchs = tag.getCompoundList("ench");
+            for (CompoundTag enchantmentTag : enchs) {
+                if (!enchantmentTag.isShort("id")) {
+                    continue;
+                }
+                if (!enchantmentTag.isShort("lvl")) {
+                    continue;
+                }
+                Enchantment enchantment = Enchantment.getById(enchantmentTag.getShort("id"));
+                addEnchant(enchantment, enchantmentTag.getShort("lvl"), true); //TODO really ignore level restriction?
+            }
+        }
     }
 
     @Override
