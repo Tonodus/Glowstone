@@ -347,7 +347,7 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
         if (!force && location.getBlock().getType() != Material.ENCHANTMENT_TABLE) {
             return null;
         }
-        return openInventory(new GlowEnchantingInventory(this));
+        return openInventory(new GlowEnchantingInventory(location, this));
     }
 
     @Override
