@@ -18,7 +18,6 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
 
     // todo: the following tags
     // - int "Score"
-    // - int "XpSeed"
     // - int "foodTickTimer"
     // in "abilities":
     // - bool "invulnerable"
@@ -36,6 +35,10 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
     @Override
     public void load(GlowPlayer entity, CompoundTag tag) {
         super.load(entity, tag);
+
+        if (tag.isInt("XpSeed")) {
+            entity.setXpSeed(tag.getInt("XpSeed"));
+        }
 
         // experience
         if (tag.isInt("XpLevel")) {
@@ -94,6 +97,8 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
 
         // players have no id tag
         tag.remove("id");
+
+        tag.putInt("XpSeed", entity.getXpSeed());
 
         // experience
         tag.putInt("XpLevel", entity.getLevel());

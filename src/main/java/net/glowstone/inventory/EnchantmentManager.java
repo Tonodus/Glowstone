@@ -2,82 +2,97 @@ package net.glowstone.inventory;
 
 
 import net.glowstone.EventFactory;
+import net.glowstone.GlowServer;
+import net.glowstone.constants.GlowEnchantment;
 import net.glowstone.entity.GlowPlayer;
-import org.apache.commons.lang.Validate;
+import net.glowstone.util.WeightedRandom;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class EnchantmentManager {
-    private final GlowPlayer player;
-    private final int[] enchantments;
-    private final Map<Enchantment, Integer> e = null;
-    private InventoryView enchantingView = null;
-    private GlowEnchantingInventory inventory;
-    private Location location;
-
     private final Random random = new Random();
+    private final GlowPlayer player;
+    private final GlowEnchantingInventory inventory;
+    private int xpSeed;
+    private final int[] enchLevelCosts = new int[3];
+    private final int[] enchId = new int[3];
+    private final int[] enchData = new int[3];
 
-    public EnchantmentManager(GlowPlayer player) {
+    public EnchantmentManager(GlowEnchantingInventory inventory, GlowPlayer player) {
         this.player = player;
-        this.enchantments = new int[3];
+        this.inventory = inventory;
+        this.xpSeed = player.getXpSeed();
     }
 
-    public void onWindowOpened(int viewId, GlowInventoryView view) {
-        if (view.getType() != InventoryType.ENCHANTING) {
-            throw new IllegalArgumentException("EnchantmentManager#onWindowOpened called with view=" + view + ", expected ENCHANTING.");
-        }
-        this.enchantingView = view;
-        this.inventory = (GlowEnchantingInventory) view.getTopInventory();
-        this.location = inventory.getLocation();
-    }
-
-    public void onWindowClosed() {
-        this.enchantingView = null;
-        this.inventory = null;
-        this.location = null;
-    }
-
-    public boolean isPlayerEnchanting() {
-        return enchantingView != null;
-    }
-
-    public void onPlayerEnchant(int clicked) {
-        if (!isPlayerEnchanting()) throw new IllegalStateException("Cannot enchant, when nor inventory is open.");
-
+    public void invalidate() {
         ItemStack item = inventory.getItem();
+        ItemStack resource = inventory.getResource();
 
-        //Checking for malicious clients
-        //TODO: better responsing for malicious clients
-        Validate.isTrue(clicked >= 0 && clicked <= 3, "Malicious client");
-        if (!canEnchant(item)) {
-            //TODO
-            return;
+        if ((player.getGameMode() != GameMode.CREATIVE && resource == null) || item == null || resource == null || resource.getType() != Material.INK_SACK || resource.getDurability() != 4) {
+            clearEnch();
+        } else {
+            calculateNewValues();
+        }
+    }
+
+    private void clearEnch() {
+        for (int i = 0; i < 3; i++) {
+            enchLevelCosts[i] = 0;
+            enchId[i] = 0;
+            enchData[i] = 0;
         }
 
-        int level = enchantments[clicked];
+        update();
+    }
 
+    private void update() {
+        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON1, enchLevelCosts[0]);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON2, enchLevelCosts[1]);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON3, enchLevelCosts[2]);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_XP_SEED, xpSeed & -16);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL1, enchId[0] | enchData[0] << 8);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL2, enchId[1] | enchData[1] << 8);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL3, enchId[2] | enchData[2] << 8);
+    }
+
+    private boolean isMaliciousClicked(int clicked) {
+        //TODO: better handling of for malicious clients?
+
+        if (clicked < 0 || clicked > enchLevelCosts.length || enchLevelCosts[clicked] <= 0) {
+            GlowServer.logger.info("Malicious client, cannot enchant slot " + clicked);
+            update();
+            return true;
+        }
+
+        int level = enchLevelCosts[clicked];
         if (player.getGameMode() != GameMode.CREATIVE) {
-            //Checking level and resource
             if (player.getLevel() < level || inventory.getResource() == null || inventory.getResource().getAmount() < clicked) {
-                return; //malicious client
+                GlowServer.logger.info("Malicious client, player has not enough levels / enough resources to enchant item!");
+                update();
+                return true;
             }
         }
 
-        Map<Enchantment, Integer> enchants = calculateEnchants(item, level);
+        return false;
+    }
 
-        EnchantItemEvent event = EventFactory.callEvent(new EnchantItemEvent(player, enchantingView, location.getBlock(), item.clone(), level, enchants, clicked));
+    public void onPlayerEnchant(int clicked) {
+        ItemStack item = inventory.getItem();
+
+        if (isMaliciousClicked(clicked)) return;
+
+        List<LeveledEnchant> enchants = calculateEnchants(item, clicked, enchLevelCosts[clicked]);
+        if (enchants == null) enchants = new ArrayList<>();
+
+        EnchantItemEvent event = EventFactory.callEvent(new EnchantItemEvent(player, player.getOpenInventory(), inventory.getLocation().getBlock(), item.clone(), enchLevelCosts[clicked], toMap(enchants), clicked));
         if (event.isCancelled() || (player.getGameMode() != GameMode.CREATIVE && event.getExpLevelCost() > player.getLevel()))
             return;
 
@@ -89,8 +104,9 @@ public class EnchantmentManager {
         for (Map.Entry<Enchantment, Integer> enchantment : event.getEnchantsToAdd().entrySet()) {
             try {
                 if (isBook) {
-                    //TODO:
-                    continue;
+                    EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
+                    meta.addStoredEnchant(enchantment.getKey(), enchantment.getValue(), true); //TODO validate true
+                    item.setItemMeta(meta);
                 } else {
                     item.addUnsafeEnchantment(enchantment.getKey(), enchantment.getValue());
                 }
@@ -99,101 +115,139 @@ public class EnchantmentManager {
             }
         }
 
+        player.enchanted(clicked);
+
         if (player.getGameMode() != GameMode.CREATIVE) {
-            player.setLevel(player.getLevel() - event.getExpLevelCost()); //TODO
-            inventory.getResource().setAmount(inventory.getResource().getAmount() - clicked);
+            ItemStack res = inventory.getResource();
+            res.setAmount(res.getAmount() - clicked + 1);
+            if (res.getAmount() <= 0)
+                inventory.setResource(null);
         }
+
+        this.xpSeed = player.getXpSeed();
+
+        update();
     }
 
-    private Map<Enchantment, Integer> calculateEnchants(ItemStack item, int level) {
-        int i = getI(item);
-        if (i <= 0) return null;
-        i /= 2;
-        i = 1 + random.nextInt((i >> 1) + 1) + random.nextInt((i >> 1) + 1);
-        int j = i + level;
-        float f = (random.nextFloat() + random.nextFloat() - 1.0F) * 0.15F;
-        int k = (int) (j * (1.0F + f) + 0.5F);
-        if (k < 1) {
-            k = 1;
+    private static Map<Enchantment, Integer> toMap(List<LeveledEnchant> list) {
+        Map<Enchantment, Integer> map = new HashMap<>(list.size());
+        for (LeveledEnchant enchant : list)
+            map.put(enchant.getEnchantment(), enchant.getLevel());
+        return map;
+    }
+
+    private List<LeveledEnchant> calculateEnchants(ItemStack item, int stage, int cost) {
+        random.setSeed(xpSeed + stage);
+        int modifier = calculateRandomizedModifier(random, item, cost);
+        if (modifier <= 0) return null;
+
+        List<LeveledEnchant> possibleEnchants = getPossibleEnchants(item, modifier);
+        if (possibleEnchants == null || possibleEnchants.isEmpty()) return null;
+
+        LeveledEnchant chosen = WeightedRandom.getRandom(random, possibleEnchants);
+        if (chosen == null) return null;
+
+        List<LeveledEnchant> enchants = new ArrayList<>();
+        enchants.add(chosen);
+
+        while (random.nextInt(50) <= modifier) {
+            removeConflicting(enchants, possibleEnchants);
+
+            if (!possibleEnchants.isEmpty()) {
+                enchants.add(WeightedRandom.getRandom(random, possibleEnchants));
+            }
+            modifier /= 2;
         }
 
-        Map<Enchantment, Integer> map = getPossibleEnchants(item, k);
-        if (map.isEmpty()) return null;
-
-        Map.Entry<Enchantment, Integer> choosen = null; //TODO: choose wheighted
-        if (choosen == null) return null;
-
-        Map<Enchantment, Integer> enchants = new HashMap<>();
-        enchants.put(choosen.getKey(), choosen.getValue());
-
-        while (random.nextInt(50) <= k) {
-            Iterator<Enchantment> it = map.keySet().iterator();
-            while (it.hasNext()) {
-                Enchantment e = it.next();
-                int n = 1;
-                for (Map.Entry<Enchantment, Integer> entry : enchants.entrySet()) {
-                    if (entry.getKey().conflictsWith(e)) {
-                        n = 0;
-                        break;
-                    }
-                }
-                if (n == 0)
-                    it.remove();
-            }
-            if (!map.isEmpty()) {
-                enchants.put(null, null); //TODO add whiehgted from map
-            }
-            k >>= 1;
+        if (item.getType() == Material.BOOK && enchants.size() > 1) {
+            enchants.remove(random.nextInt(enchants.size()));
         }
 
         return enchants;
     }
 
-    private static int getI(ItemStack item) {
-        switch (item.getType()) {
+    private static void removeConflicting(List<LeveledEnchant> enchants, List<LeveledEnchant> toReduce) {
+        Iterator<LeveledEnchant> it = toReduce.iterator();
+
+        while (it.hasNext()) {
+            Enchantment currentEnchantment = it.next().getEnchantment();
+
+            boolean conflicts = false;
+            for (LeveledEnchant entry : enchants) {
+                if (entry.getEnchantment().conflictsWith(currentEnchantment)) {
+                    conflicts = true;
+                    break;
+                }
+            }
+            if (conflicts)
+                it.remove();
+        }
+    }
+
+    private static int calculateRandomizedModifier(Random random, ItemStack itemStack, int cost) {
+        int modifier = calculateModifier(itemStack);
+        if (modifier <= 0) return -1;
+
+        float randomValue = 1 + (random.nextFloat() + random.nextFloat() - 1.0F) * 0.15F;
+
+
+        modifier /= 4;
+        modifier += 1;
+        modifier = random.nextInt(modifier) + random.nextInt(modifier);
+        modifier += 1 + cost;
+
+        modifier = Math.round(modifier * randomValue);
+
+        modifier = Math.max(1, modifier);
+        return modifier;
+    }
+
+    private static int calculateModifier(ItemStack item) {
+        Material type = item.getType();
+
+        switch (type) {
             case BOOK:
             case BOW:
             case FISHING_ROD:
                 return 1;
-
-            case WOOD_PICKAXE:
-            case WOOD_AXE:
-                //case ...
-                return 15;
-            case STONE_AXE:
-                return 5;
-            case IRON_AXE:
-                return 14;
-            case DIAMOND_AXE:
-                return 10;
-            case GOLD_AXE:
-                return 22;
-
-            case CHAINMAIL_CHESTPLATE:
-                return 12;
-            case DIAMOND_CHESTPLATE:
-                return 10;
-            case IRON_CHESTPLATE:
-                return 9;
-            case GOLD_CHESTPLATE:
-                return 25;
-            case LEATHER_CHESTPLATE:
-                return 15;
-
-
-            default:
-                return 0;
         }
+
+        if (ClothType.CHAINMAIL.matches(type))
+            return 12;
+        else if (ClothType.IRON.matches(type))
+            return 9;
+        else if (ClothType.DIAMOND.matches(type))
+            return 10;
+        else if (ClothType.LEATHER.matches(type))
+            return 15;
+        else if (ClothType.GOLD.matches(type))
+            return 25;
+
+
+        else if (MaterialToolType.WOOD.matches(type))
+            return 15;
+        else if (MaterialToolType.STONE.matches(type))
+            return 5;
+        else if (MaterialToolType.DIAMOND.matches(type))
+            return 10;
+        else if (MaterialToolType.IRON.matches(type))
+            return 14;
+        else if (MaterialToolType.GOLD.matches(type))
+            return 22;
+
+        return 0;
     }
 
-    private static Map<Enchantment, Integer> getPossibleEnchants(ItemStack item, int i) {
-        Map<Enchantment, Integer> enchantments = new HashMap<>();
+    private static List<LeveledEnchant> getPossibleEnchants(ItemStack item, int modifier) {
+        List<LeveledEnchant> enchantments = new ArrayList<>();
+
+        boolean isBook = item.getType() == Material.BOOK;
 
         for (Enchantment enchantment : Enchantment.values()) {
-            if (enchantment.canEnchantItem(item) || item.getType() == Material.BOOK) {
+            if (enchantment.canEnchantItem(item) || isBook) {
                 for (int level = enchantment.getStartLevel(); level <= enchantment.getMaxLevel(); level++) {
-                    if ((i >= enchantment.a(level)) && (i <= enchantment.b(level))) {
-                        enchantments.put(enchantment, level);
+                    if (((GlowEnchantment) enchantment).isInRange(modifier)) {
+                        enchantments.add(new LeveledEnchant(enchantment, level));
                     }
                 }
             }
@@ -202,115 +256,59 @@ public class EnchantmentManager {
         return enchantments;
     }
 
-    public void updatePossibilities() {
-        ItemStack item = inventory.getItem();
-        ItemStack resource = inventory.getResource();
-
-        if (item == null || resource == null || resource.getType() != Material.INK_SACK || resource.getDurability() != 4 || !canEnchant(item)) {
-            clearView();
-        } else {
-            calculateNewValues();
-        }
-    }
-
     private void calculateNewValues() {
-        int realBookshelfs = getBookshelfCount(location);
+        random.setSeed(xpSeed);
+
+        int realBookshelfs = inventory.getBookshelfCount();
         int countBookshelf = Math.min(15, realBookshelfs);
 
-        for (int i = 0; i < enchantments.length; i++) {
-            if (!canEnchant(inventory.getItem())) {
-                enchantments[i] = 0;
-                continue;
-            }
-
-            int j = random.nextInt(8) + 1 + (countBookshelf >> 1) + random.nextInt(countBookshelf + 1);
-            if (i == 0) {
-                enchantments[i] = Math.max(j / 3, 1);
-            } else if (i == 1) {
-                enchantments[i] = j * 2 / 3 + 1;
-            } else {
-                enchantments[i] = Math.max(j, countBookshelf * 2);
-            }
+        for (int i = 0; i < enchLevelCosts.length; i++) {
+            enchLevelCosts[i] = calculateLevelCost(i, countBookshelf);
+            enchId[i] = 0;
+            enchData[i] = 0;
         }
 
-        PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, enchantingView, location.getBlock(), inventory.getItem(), enchantments, realBookshelfs);
-        event.setCancelled(false); //TODO
+        PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, player.getOpenInventory(), inventory.getLocation().getBlock(), inventory.getItem(), enchLevelCosts, realBookshelfs);
+        event.setCancelled(inventory.getItem().getEnchantments().size() == 0); //TODO only tools (expect books)
         EventFactory.callEvent(event);
         if (event.isCancelled()) {
-            for (int i = 0; i < enchantments.length; i++)
-                enchantments[i] = 0;
+            for (int i = 0; i < enchLevelCosts.length; i++)
+                enchLevelCosts[i] = 0;
+        } else {
+            for (int i = 0; i < enchLevelCosts.length; i++) {
+                if (enchLevelCosts[i] == 0) continue;
+                List<LeveledEnchant> enchants = calculateEnchants(inventory.getItem(), i, enchLevelCosts[i]);
+                if (enchants != null && !enchants.isEmpty()) {
+                    LeveledEnchant chosen = WeightedRandom.getRandom(random, enchants);
+                    this.enchId[i] = chosen.getEnchantment().getId();
+                    this.enchData[i] = chosen.getLevel();
+                }
+            }
         }
 
         update();
     }
 
-    private void clearView() {
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON1, 0);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON2, 0);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON3, 0);
-    }
+    private int calculateLevelCost(int stage, int countBookshelf) {
+        int modifier = calculateModifier(inventory.getItem());
+        if (modifier <= 0) return 0;
 
-    private void update() {
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON1, enchantments[0]);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON2, enchantments[1]);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON3, enchantments[2]);
-    }
+        int rand = random.nextInt(8) + random.nextInt(countBookshelf + 1);
+        rand += 1;
+        rand += countBookshelf / 2;
 
-    private boolean canEnchant(ItemStack item) {
-        Enchantment[] enchantments = Enchantment.values();
-        for (Enchantment enchantment : enchantments) {
-            if (enchantment.canEnchantItem(item))
-                return true;
-        }
-        return false;
-    }
-
-    private static int getBookshelfCount(Location location) {
-        int count = 0;
-
-        for (int y = 0; y <= 1; y++) {
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    if (z == 0 && x == 0) continue;
-                    Location loc = location.clone();
-                    loc.add(x, 0, z);
-                    if (loc.getBlock().isEmpty()) {
-                        loc.add(0, 1, 0);
-                        if (loc.getBlock().isEmpty()) {
-                            setLocation(loc, location);
-
-                            //diagonal and straight
-                            loc.add(x * 2, y, z * 2);
-                            if (loc.getBlock().getType() == Material.BOOKSHELF) {
-                                count++;
-                            }
-
-                            if (x != 0 && z != 0) {
-                                //one block diagonal and one straight
-                                setLocation(loc, location);
-                                loc.add(x * 2, y, z);
-                                if (loc.getBlock().getType() == Material.BOOKSHELF) {
-                                    ++count;
-                                }
-
-                                setLocation(loc, location);
-                                loc.add(x, y, z * 2);
-                                if (loc.getBlock().getType() == Material.BOOKSHELF) {
-                                    ++count;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        int result;
+        if (stage == 0) {
+            result = Math.max(rand / 3, 1);
+        } else if (stage == 1) {
+            result = rand * 2 / 3 + 1;
+        } else {
+            result = Math.max(rand, countBookshelf * 2);
         }
 
-        return count;
-    }
-
-    private static void setLocation(Location modify, Location source) {
-        modify.setX(source.getX());
-        modify.setY(source.getY());
-        modify.setZ(source.getZ());
+        if (result < stage + 1)
+            return 0;
+        else
+            return result;
     }
 }

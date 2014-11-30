@@ -3,6 +3,7 @@ package net.glowstone.inventory;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 
 public class GlowAnvilInventory extends GlowInventory implements AnvilInventory {
 
@@ -16,6 +17,17 @@ public class GlowAnvilInventory extends GlowInventory implements AnvilInventory 
         slotTypes[FIRST_ITEM_SLOT] = InventoryType.SlotType.CRAFTING;
         slotTypes[SECOND_ITEM_SLOT] = InventoryType.SlotType.CRAFTING;
         slotTypes[RESULT_SLOT] = InventoryType.SlotType.RESULT;
+    }
+
+    @Override
+    public void setItem(int index, ItemStack item) {
+        super.setItem(index, item);
+
+        checkEnchanting();
+    }
+
+    private void checkEnchanting() {
+
     }
 
     @Override

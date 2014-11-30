@@ -10,9 +10,7 @@ import net.glowstone.entity.meta.ClientSettings;
 import net.glowstone.entity.meta.MetadataIndex;
 import net.glowstone.entity.meta.MetadataMap;
 import net.glowstone.entity.meta.profile.PlayerProfile;
-import net.glowstone.inventory.EnchantmentManager;
 import net.glowstone.inventory.GlowInventory;
-import net.glowstone.inventory.GlowInventoryView;
 import net.glowstone.inventory.InventoryMonitor;
 import net.glowstone.io.PlayerDataService;
 import net.glowstone.net.GlowSession;
@@ -36,7 +34,6 @@ import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.InventoryView;
@@ -248,10 +245,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
      */
     private float walkSpeed = 0.2f;
 
-    /**
-     * The player's EnchantmentManager.
-     */
-    private EnchantmentManager enchantmentManager;
+    private int xpSeed;
 
     /**
      * Creates a new player and adds it to the world.
@@ -314,8 +308,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
         sendSkyDarkness();
         sendAbilities();
 
-        enchantmentManager = new EnchantmentManager(this);
-
         invMonitor = new InventoryMonitor(getOpenInventory());
         updateInventory(); // send inventory contents
 
@@ -358,14 +350,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
      */
     public GlowSession getSession() {
         return session;
-    }
-
-    /**
-     * Gets the player's {@link EnchantmentManager}, which keeps track of possible enchantments.
-     * @return The player's {@link EnchantmentManager}
-     */
-    public EnchantmentManager getEnchantmentManager() {
-        return enchantmentManager;
     }
 
     /**
@@ -1675,10 +1659,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     @Override
     public void openInventory(InventoryView view) {
-        if (getOpenInventory().getType() == InventoryType.ENCHANTING) {
-            enchantmentManager.onWindowClosed();
-        }
-
         session.send(new CloseWindowMessage(invMonitor.getId()));
 
         super.openInventory(view);
@@ -1693,10 +1673,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
             }
             Message open = new OpenWindowMessage(viewId, invMonitor.getType(), title, ((GlowInventory) view.getTopInventory()).getRawSlots());
             session.send(open);
-        }
-
-        if (view.getType() == InventoryType.ENCHANTING) {
-            enchantmentManager.onWindowOpened(viewId, (GlowInventoryView) view);
         }
 
         updateInventory();
@@ -1911,5 +1887,24 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
             }
             session.send(new PluginMessage("REGISTER", buf.array()));
         }
+    }
+
+    public void setXpSeed(int xpSeed) {
+        this.xpSeed = xpSeed;
+    }
+
+    public int getXpSeed() {
+        return xpSeed;
+    }
+
+    public void enchanted(int clicked) {
+        this.level -= clicked + 1;
+        if (level < 0) {
+            this.level = 0;
+            this.experience = 0;
+            this.totalExperience = 0;
+        }
+        setLevel(level);
+        xpSeed = new Random().nextInt(); //TODO
     }
 }
