@@ -51,6 +51,16 @@ class GlowMetaItem implements ItemMeta {
         return new GlowMetaItem(this);
     }
 
+    protected static void serializeEnchants(String name, Map<String, Object> map, Map<Enchantment, Integer> enchants) {
+        Map<String, Object> enchantList = new HashMap<>();
+
+        for (Map.Entry<Enchantment, Integer> enchantment : enchants.entrySet()) {
+            enchantList.put(enchantment.getKey().getName(), enchantment.getValue());
+        }
+
+        map.put(name, enchantList);
+    }
+
     @Override
     public Map<String, Object> serialize() {
         Map<String, Object> result = new HashMap<>();
@@ -64,16 +74,23 @@ class GlowMetaItem implements ItemMeta {
         }
 
         if (hasEnchants()) {
-            Map<String, Object> enchants = new HashMap<>();
-
-            for (Map.Entry<Enchantment, Integer> enchantment : getEnchants().entrySet()) {
-                enchants.put(enchantment.getKey().getName(), enchantment.getValue());
-            }
-
-            result.put("enchants", enchants);
+            serializeEnchants("enchants", result, getEnchants());
         }
 
         return result;
+    }
+
+    protected static void writeNbtEnchants(String name, CompoundTag to, Map<Enchantment, Integer> enchants) {
+        List<CompoundTag> ench = new ArrayList<>();
+
+        for (Map.Entry<Enchantment, Integer> enchantment : enchants.entrySet()) {
+            CompoundTag enchantmentTag = new CompoundTag();
+            enchantmentTag.putShort("id", enchantment.getKey().getId());
+            enchantmentTag.putShort("lvl", enchantment.getValue());
+            ench.add(enchantmentTag);
+        }
+
+        to.putCompoundList(name, ench);
     }
 
     void writeNbt(CompoundTag tag) {
@@ -90,17 +107,25 @@ class GlowMetaItem implements ItemMeta {
         }
 
         if (hasEnchants()) {
-            List<CompoundTag> ench = new ArrayList<>();
-
-            for (Map.Entry<Enchantment, Integer> enchantment : getEnchants().entrySet()) {
-                CompoundTag enchantmentTag = new CompoundTag();
-                enchantmentTag.putShort("id", enchantment.getKey().getId());
-                enchantmentTag.putShort("lvl", enchantment.getValue());
-                ench.add(enchantmentTag);
-            }
-
-            tag.putCompoundList("ench", ench);
+            writeNbtEnchants("ench", tag, enchants);
         }
+    }
+
+    protected static Map<Enchantment, Integer> readNbtEnchants(String name, CompoundTag tag) {
+        Map<Enchantment, Integer> result = null;
+
+        if (tag.isList(name, TagType.COMPOUND)) {
+            Iterable<CompoundTag> enchs = tag.getCompoundList(name);
+            for (CompoundTag enchantmentTag : enchs) {
+                if (enchantmentTag.isShort("id") && enchantmentTag.isShort("lvl")) {
+                    Enchantment enchantment = Enchantment.getById(enchantmentTag.getShort("id"));
+                    if (result == null) result = new HashMap<>(4);
+                    result.put(enchantment, (int) enchantmentTag.getShort("lvl"));
+                }
+            }
+        }
+
+        return result;
     }
 
     void readNbt(CompoundTag tag) {
@@ -114,18 +139,13 @@ class GlowMetaItem implements ItemMeta {
             }
         }
 
-        if (tag.isList("ench", TagType.COMPOUND)) {
-            Iterable<CompoundTag> enchs = tag.getCompoundList("ench");
-            for (CompoundTag enchantmentTag : enchs) {
-                if (!enchantmentTag.isShort("id")) {
-                    continue;
-                }
-                if (!enchantmentTag.isShort("lvl")) {
-                    continue;
-                }
-                Enchantment enchantment = Enchantment.getById(enchantmentTag.getShort("id"));
-                addEnchant(enchantment, enchantmentTag.getShort("lvl"), true); //TODO really ignore level restriction?
-            }
+        //TODO currently ignoring level restriction, is that right?
+        Map<Enchantment, Integer> tagEnchants = readNbtEnchants("ench", tag);
+        if (tagEnchants != null) {
+            if (enchants == null)
+                enchants = tagEnchants;
+            else
+                enchants.putAll(tagEnchants);
         }
     }
 
@@ -212,6 +232,13 @@ class GlowMetaItem implements ItemMeta {
 
     @Override
     public boolean hasConflictingEnchant(Enchantment ench) {
+        if (!hasEnchants()) return false;
+
+        for (Enchantment e : enchants.keySet()) {
+            if (e.conflictsWith(ench))
+                return true;
+        }
+
         return false;
     }
 }
