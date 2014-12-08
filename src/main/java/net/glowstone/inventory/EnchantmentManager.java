@@ -32,56 +32,18 @@ public class EnchantmentManager {
         this.xpSeed = player.getXpSeed();
     }
 
+    ////////////////////////////
+    // Public functions
+
     public void invalidate() {
         ItemStack item = inventory.getItem();
         ItemStack resource = inventory.getResource();
 
-        if ((player.getGameMode() != GameMode.CREATIVE && resource == null) || item == null || resource == null || resource.getType() != Material.INK_SACK || resource.getDurability() != 4) {
+        if (item == null || (player.getGameMode() != GameMode.CREATIVE && (resource == null || resource.getType() != Material.INK_SACK || resource.getDurability() != 4))) {
             clearEnch();
         } else {
             calculateNewValues();
         }
-    }
-
-    private void clearEnch() {
-        for (int i = 0; i < 3; i++) {
-            enchLevelCosts[i] = 0;
-            enchId[i] = 0;
-            enchData[i] = 0;
-        }
-
-        update();
-    }
-
-    private void update() {
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON1, enchLevelCosts[0]);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON2, enchLevelCosts[1]);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON3, enchLevelCosts[2]);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_XP_SEED, xpSeed & -16);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL1, enchId[0] | enchData[0] << 8);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL2, enchId[1] | enchData[1] << 8);
-        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL3, enchId[2] | enchData[2] << 8);
-    }
-
-    private boolean isMaliciousClicked(int clicked) {
-        //TODO: better handling of for malicious clients?
-
-        if (clicked < 0 || clicked > enchLevelCosts.length || enchLevelCosts[clicked] <= 0) {
-            GlowServer.logger.info("Malicious client, cannot enchant slot " + clicked);
-            update();
-            return true;
-        }
-
-        int level = enchLevelCosts[clicked];
-        if (player.getGameMode() != GameMode.CREATIVE) {
-            if (player.getLevel() < level || inventory.getResource() == null || inventory.getResource().getAmount() < clicked) {
-                GlowServer.logger.info("Malicious client, player has not enough levels / enough resources to enchant item!");
-                update();
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public void onPlayerEnchant(int clicked) {
@@ -129,12 +91,8 @@ public class EnchantmentManager {
         update();
     }
 
-    private static Map<Enchantment, Integer> toMap(List<LeveledEnchant> list) {
-        Map<Enchantment, Integer> map = new HashMap<>(list.size());
-        for (LeveledEnchant enchant : list)
-            map.put(enchant.getEnchantment(), enchant.getLevel());
-        return map;
-    }
+    /////////////////////////////
+    // Enchantments calculating
 
     private List<LeveledEnchant> calculateEnchants(ItemStack item, int stage, int cost) {
         random.setSeed(xpSeed + stage);
@@ -166,23 +124,64 @@ public class EnchantmentManager {
         return enchants;
     }
 
-    private static void removeConflicting(List<LeveledEnchant> enchants, List<LeveledEnchant> toReduce) {
-        Iterator<LeveledEnchant> it = toReduce.iterator();
+    private void calculateNewValues() {
+        random.setSeed(xpSeed);
 
-        while (it.hasNext()) {
-            Enchantment currentEnchantment = it.next().getEnchantment();
+        int realBookshelfs = inventory.getBookshelfCount();
+        int countBookshelf = Math.min(15, realBookshelfs);
 
-            boolean conflicts = false;
-            for (LeveledEnchant entry : enchants) {
-                if (entry.getEnchantment().conflictsWith(currentEnchantment)) {
-                    conflicts = true;
-                    break;
+        for (int i = 0; i < enchLevelCosts.length; i++) {
+            enchLevelCosts[i] = calculateLevelCost(i, countBookshelf);
+            enchId[i] = 0;
+            enchData[i] = 0;
+        }
+
+        PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, player.getOpenInventory(), inventory.getLocation().getBlock(), inventory.getItem(), enchLevelCosts, realBookshelfs);
+        event.setCancelled(inventory.getItem().getEnchantments().size() > 0); //TODO only tools (expect books)
+        EventFactory.callEvent(event);
+        if (event.isCancelled()) {
+            for (int i = 0; i < enchLevelCosts.length; i++)
+                enchLevelCosts[i] = 0;
+        } else {
+            for (int i = 0; i < enchLevelCosts.length; i++) {
+                if (enchLevelCosts[i] == 0) continue;
+                List<LeveledEnchant> enchants = calculateEnchants(inventory.getItem(), i, enchLevelCosts[i]);
+                if (enchants != null && !enchants.isEmpty()) {
+                    LeveledEnchant chosen = WeightedRandom.getRandom(random, enchants);
+                    this.enchId[i] = chosen.getEnchantment().getId();
+                    this.enchData[i] = chosen.getLevel();
                 }
             }
-            if (conflicts)
-                it.remove();
         }
+
+        update();
     }
+
+    private int calculateLevelCost(int stage, int countBookshelf) {
+        int modifier = calculateModifier(inventory.getItem());
+        if (modifier <= 0) return 0;
+
+        int rand = random.nextInt(8) + random.nextInt(countBookshelf + 1);
+        rand += 1;
+        rand += countBookshelf / 2;
+
+        int result;
+        if (stage == 0) {
+            result = Math.max(rand / 3, 1);
+        } else if (stage == 1) {
+            result = rand * 2 / 3 + 1;
+        } else {
+            result = Math.max(rand, countBookshelf * 2);
+        }
+
+        if (result < stage + 1)
+            return 0;
+        else
+            return result;
+    }
+
+    //////////////////////////////////
+    // Sort of constants
 
     private static int calculateRandomizedModifier(Random random, ItemStack itemStack, int cost) {
         int modifier = calculateModifier(itemStack);
@@ -203,6 +202,7 @@ public class EnchantmentManager {
     }
 
     private static int calculateModifier(ItemStack item) {
+        //TODO: replace this by a better system?
         Material type = item.getType();
 
         switch (type) {
@@ -246,7 +246,7 @@ public class EnchantmentManager {
         for (Enchantment enchantment : Enchantment.values()) {
             if (enchantment.canEnchantItem(item) || isBook) {
                 for (int level = enchantment.getStartLevel(); level <= enchantment.getMaxLevel(); level++) {
-                    if (((GlowEnchantment) enchantment).isInRange(modifier)) {
+                    if (((GlowEnchantment) enchantment).isInRange(level, modifier)) {
                         enchantments.add(new LeveledEnchant(enchantment, level));
                     }
                 }
@@ -256,59 +256,72 @@ public class EnchantmentManager {
         return enchantments;
     }
 
-    private void calculateNewValues() {
-        random.setSeed(xpSeed);
+    /////////////////////////////////////
+    // Internal stuff / helper functions
 
-        int realBookshelfs = inventory.getBookshelfCount();
-        int countBookshelf = Math.min(15, realBookshelfs);
+    private static Map<Enchantment, Integer> toMap(List<LeveledEnchant> list) {
+        Map<Enchantment, Integer> map = new HashMap<>(list.size());
+        for (LeveledEnchant enchant : list)
+            map.put(enchant.getEnchantment(), enchant.getLevel());
+        return map;
+    }
 
-        for (int i = 0; i < enchLevelCosts.length; i++) {
-            enchLevelCosts[i] = calculateLevelCost(i, countBookshelf);
-            enchId[i] = 0;
-            enchData[i] = 0;
-        }
+    private static void removeConflicting(List<LeveledEnchant> enchants, List<LeveledEnchant> toReduce) {
+        Iterator<LeveledEnchant> it = toReduce.iterator();
 
-        PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, player.getOpenInventory(), inventory.getLocation().getBlock(), inventory.getItem(), enchLevelCosts, realBookshelfs);
-        event.setCancelled(inventory.getItem().getEnchantments().size() == 0); //TODO only tools (expect books)
-        EventFactory.callEvent(event);
-        if (event.isCancelled()) {
-            for (int i = 0; i < enchLevelCosts.length; i++)
-                enchLevelCosts[i] = 0;
-        } else {
-            for (int i = 0; i < enchLevelCosts.length; i++) {
-                if (enchLevelCosts[i] == 0) continue;
-                List<LeveledEnchant> enchants = calculateEnchants(inventory.getItem(), i, enchLevelCosts[i]);
-                if (enchants != null && !enchants.isEmpty()) {
-                    LeveledEnchant chosen = WeightedRandom.getRandom(random, enchants);
-                    this.enchId[i] = chosen.getEnchantment().getId();
-                    this.enchData[i] = chosen.getLevel();
+        while (it.hasNext()) {
+            Enchantment currentEnchantment = it.next().getEnchantment();
+
+            boolean conflicts = false;
+            for (LeveledEnchant entry : enchants) {
+                if (entry.getEnchantment().conflictsWith(currentEnchantment)) {
+                    conflicts = true;
+                    break;
                 }
             }
+            if (conflicts)
+                it.remove();
+        }
+    }
+
+    private void clearEnch() {
+        for (int i = 0; i < 3; i++) {
+            enchLevelCosts[i] = 0;
+            enchId[i] = 0;
+            enchData[i] = 0;
         }
 
         update();
     }
 
-    private int calculateLevelCost(int stage, int countBookshelf) {
-        int modifier = calculateModifier(inventory.getItem());
-        if (modifier <= 0) return 0;
+    private void update() {
+        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON1, enchLevelCosts[0]);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON2, enchLevelCosts[1]);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_BUTTON3, enchLevelCosts[2]);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_XP_SEED, xpSeed & -16);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL1, enchId[0] | enchData[0] << 8);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL2, enchId[1] | enchData[1] << 8);
+        player.setWindowProperty(InventoryView.Property.ENCHANT_ID_AND_LEVEL3, enchId[2] | enchData[2] << 8);
+    }
 
-        int rand = random.nextInt(8) + random.nextInt(countBookshelf + 1);
-        rand += 1;
-        rand += countBookshelf / 2;
+    private boolean isMaliciousClicked(int clicked) {
+        //TODO: better handling of for malicious clients?
 
-        int result;
-        if (stage == 0) {
-            result = Math.max(rand / 3, 1);
-        } else if (stage == 1) {
-            result = rand * 2 / 3 + 1;
-        } else {
-            result = Math.max(rand, countBookshelf * 2);
+        if (clicked < 0 || clicked > enchLevelCosts.length || enchLevelCosts[clicked] <= 0) {
+            GlowServer.logger.info("Malicious client, cannot enchant slot " + clicked);
+            update();
+            return true;
         }
 
-        if (result < stage + 1)
-            return 0;
-        else
-            return result;
+        int level = enchLevelCosts[clicked];
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            if (player.getLevel() < level || inventory.getResource() == null || inventory.getResource().getAmount() < clicked) {
+                GlowServer.logger.info("Malicious client, player has not enough levels / enough resources to enchant item!");
+                update();
+                return true;
+            }
+        }
+
+        return false;
     }
 }

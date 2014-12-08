@@ -55,8 +55,8 @@ public final class GlowEnchantment extends Enchantment implements WeightedRandom
         return impl.weight;
     }
 
-    public boolean isInRange(int modifier) {
-        return modifier >= impl.getMinRange(modifier) && modifier <= impl.getMaxRange(modifier);
+    public boolean isInRange(int level, int modifier) {
+        return modifier >= impl.getMinRange(level) && modifier <= impl.getMaxRange(level);
     }
 
     /**
