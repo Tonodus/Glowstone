@@ -1,6 +1,5 @@
 package net.glowstone.constants;
 
-import net.glowstone.inventory.ClothType;
 import net.glowstone.inventory.MaterialMatcher;
 import net.glowstone.inventory.ToolType;
 import net.glowstone.util.WeightedRandom;
@@ -260,7 +259,7 @@ public final class GlowEnchantment extends Enchantment implements WeightedRandom
 
             @Override
             public int getMaxRange(int modifier) {
-                return getMaxRange(modifier) + 25;
+                return getMinRange(modifier) + 25;
             }
         },
         ARROW_FIRE(50, "Flame", 1, 2, EnchantmentTarget.BOW) {
