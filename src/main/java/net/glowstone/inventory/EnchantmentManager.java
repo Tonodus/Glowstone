@@ -94,8 +94,8 @@ public class EnchantmentManager {
     /////////////////////////////
     // Enchantments calculating
 
-    private List<LeveledEnchant> calculateEnchants(ItemStack item, int stage, int cost) {
-        random.setSeed(xpSeed + stage);
+    private List<LeveledEnchant> calculateEnchants(ItemStack item, int level, int cost) {
+        random.setSeed(xpSeed + level);
         int modifier = calculateRandomizedModifier(random, item, cost);
         if (modifier <= 0) return null;
 
@@ -192,8 +192,8 @@ public class EnchantmentManager {
 
         float randomValue = 1 + (random.nextFloat() + random.nextFloat() - 1.0F) * 0.15F;
         modifier = Math.round(modifier * randomValue);
-
         modifier = Math.max(1, modifier);
+
         return modifier;
     }
 

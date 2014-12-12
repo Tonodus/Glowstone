@@ -245,8 +245,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
      */
     private float walkSpeed = 0.2f;
 
-    private int xpSeed;
-
     /**
      * Creates a new player and adds it to the world.
      * @param session The player's session.
@@ -1889,14 +1887,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
         }
     }
 
-    public void setXpSeed(int xpSeed) {
-        this.xpSeed = xpSeed;
-    }
-
-    public int getXpSeed() {
-        return xpSeed;
-    }
-
     public void enchanted(int clicked) {
         this.level -= clicked + 1;
         if (level < 0) {
@@ -1905,6 +1895,6 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
             this.totalExperience = 0;
         }
         setLevel(level);
-        xpSeed = new Random().nextInt(); //TODO
+        setXpSeed(new Random().nextInt()); //TODO
     }
 }

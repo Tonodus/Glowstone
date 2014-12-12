@@ -36,10 +36,6 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
     public void load(GlowPlayer entity, CompoundTag tag) {
         super.load(entity, tag);
 
-        if (tag.isInt("XpSeed")) {
-            entity.setXpSeed(tag.getInt("XpSeed"));
-        }
-
         // experience
         if (tag.isInt("XpLevel")) {
             entity.setLevel(tag.getInt("XpLevel"));
@@ -97,8 +93,6 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
 
         // players have no id tag
         tag.remove("id");
-
-        tag.putInt("XpSeed", entity.getXpSeed());
 
         // experience
         tag.putInt("XpLevel", entity.getLevel());
