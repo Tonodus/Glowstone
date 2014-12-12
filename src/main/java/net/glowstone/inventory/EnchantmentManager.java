@@ -47,9 +47,9 @@ public class EnchantmentManager {
     }
 
     public void onPlayerEnchant(int clicked) {
-        ItemStack item = inventory.getItem();
+        if (enchLevelCosts[clicked] <= 0 || isMaliciousClicked(clicked)) return;
 
-        if (isMaliciousClicked(clicked)) return;
+        ItemStack item = inventory.getItem();
 
         List<LeveledEnchant> enchants = calculateEnchants(item, clicked, enchLevelCosts[clicked]);
         if (enchants == null) enchants = new ArrayList<>();
@@ -63,7 +63,12 @@ public class EnchantmentManager {
         if (isBook)
             item.setType(Material.ENCHANTED_BOOK);
 
-        for (Map.Entry<Enchantment, Integer> enchantment : event.getEnchantsToAdd().entrySet()) {
+        Map<Enchantment, Integer> toAdd = event.getEnchantsToAdd();
+        if (toAdd == null || toAdd.isEmpty()) {
+            return;
+        }
+
+        for (Map.Entry<Enchantment, Integer> enchantment : toAdd.entrySet()) {
             try {
                 if (isBook) {
                     EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
@@ -132,8 +137,8 @@ public class EnchantmentManager {
 
         for (int i = 0; i < enchLevelCosts.length; i++) {
             enchLevelCosts[i] = calculateLevelCost(i, countBookshelf);
-            enchId[i] = 0;
-            enchData[i] = 0;
+            enchId[i] = -1;
+            enchData[i] = -1;
         }
 
         PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, player.getOpenInventory(), inventory.getLocation().getBlock(), inventory.getItem(), enchLevelCosts, realBookshelfs);
@@ -283,8 +288,8 @@ public class EnchantmentManager {
     private void clearEnch() {
         for (int i = 0; i < 3; i++) {
             enchLevelCosts[i] = 0;
-            enchId[i] = 0;
-            enchData[i] = 0;
+            enchId[i] = -1;
+            enchData[i] = -1;
         }
 
         update();
@@ -303,7 +308,7 @@ public class EnchantmentManager {
     private boolean isMaliciousClicked(int clicked) {
         //TODO: better handling of for malicious clients?
 
-        if (clicked < 0 || clicked > enchLevelCosts.length || enchLevelCosts[clicked] <= 0) {
+        if (clicked < 0 || clicked > enchLevelCosts.length) {
             GlowServer.logger.info("Malicious client, cannot enchant slot " + clicked);
             update();
             return true;
