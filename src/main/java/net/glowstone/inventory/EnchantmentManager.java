@@ -3,7 +3,7 @@ package net.glowstone.inventory;
 
 import net.glowstone.EventFactory;
 import net.glowstone.GlowServer;
-import net.glowstone.constants.GlowEnchantment;
+import net.glowstone.constants.enchantments.GlowEnchantment;
 import net.glowstone.entity.GlowPlayer;
 import net.glowstone.util.WeightedRandom;
 import org.bukkit.GameMode;
