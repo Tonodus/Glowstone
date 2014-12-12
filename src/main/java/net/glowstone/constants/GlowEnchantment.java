@@ -1,6 +1,8 @@
 package net.glowstone.constants;
 
+import net.glowstone.inventory.ClothType;
 import net.glowstone.inventory.MaterialMatcher;
+import net.glowstone.inventory.ToolType;
 import net.glowstone.util.WeightedRandom;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -72,33 +74,14 @@ public final class GlowEnchantment extends Enchantment implements WeightedRandom
     private static final MaterialMatcher SWORD_OR_AXE = new MaterialMatcher() {
         @Override
         public boolean matches(Material item) {
-            return EnchantmentTarget.WEAPON.includes(item)
-                    || item.equals(Material.WOOD_AXE)
-                    || item.equals(Material.STONE_AXE)
-                    || item.equals(Material.IRON_AXE)
-                    || item.equals(Material.DIAMOND_AXE)
-                    || item.equals(Material.GOLD_AXE);
+            return ToolType.SWORD.matches(item) || ToolType.AXE.matches(item);
         }
     };
 
     private static final MaterialMatcher BASE_TOOLS = new MaterialMatcher() {
         @Override
         public boolean matches(Material item) {
-            return item.equals(Material.WOOD_SPADE)
-                    || item.equals(Material.STONE_SPADE)
-                    || item.equals(Material.IRON_SPADE)
-                    || item.equals(Material.DIAMOND_SPADE)
-                    || item.equals(Material.GOLD_SPADE)
-                    || item.equals(Material.WOOD_PICKAXE)
-                    || item.equals(Material.STONE_PICKAXE)
-                    || item.equals(Material.IRON_PICKAXE)
-                    || item.equals(Material.DIAMOND_PICKAXE)
-                    || item.equals(Material.GOLD_PICKAXE)
-                    || item.equals(Material.WOOD_AXE)
-                    || item.equals(Material.STONE_AXE)
-                    || item.equals(Material.IRON_AXE)
-                    || item.equals(Material.DIAMOND_AXE)
-                    || item.equals(Material.GOLD_AXE);
+            return ToolType.SPADE.matches(item) || ToolType.PICKAXE.matches(item) || ToolType.AXE.matches(item);
         }
     };
 
