@@ -12,28 +12,63 @@ import org.bukkit.inventory.ItemStack;
  * Definitions of enchantment types.
  */
 public class GlowEnchantment extends Enchantment implements WeightedRandom.Choice {
+    protected static final MaterialMatcher SWORD_OR_AXE = new MaterialMatcher() {
+        @Override
+        public boolean matches(Material item) {
+            return ToolType.SWORD.matches(item) || ToolType.AXE.matches(item);
+        }
+    };
+    protected static final MaterialMatcher BASE_TOOLS = new MaterialMatcher() {
+        @Override
+        public boolean matches(Material item) {
+            return ToolType.SPADE.matches(item) || ToolType.PICKAXE.matches(item) || ToolType.AXE.matches(item);
+        }
+    };
+    protected static final MaterialMatcher DIGGING_TOOLS = new MaterialMatcher() {
+        @Override
+        public boolean matches(Material material) {
+            return BASE_TOOLS.matches(material)
+                    || material == Material.SHEARS;
+        }
+    };
+    protected static final MaterialMatcher ALL_THINGS = new MaterialMatcher() {
+        @Override
+        public boolean matches(Material material) {
+            return EnchantmentTarget.TOOL.includes(material)
+                    || EnchantmentTarget.WEAPON.includes(material)
+                    || EnchantmentTarget.ARMOR.includes(material)
+                    || material == Material.FISHING_ROD
+                    || material == Material.BOW
+                    || material == Material.CARROT_STICK;
+        }
+    };
+
+
+    public final int weight;
     private final String name;
+    private final String userName;
     private final int maxLevel;
     private final EnchantmentTarget target;
     private final MaterialMatcher matcher;
     private final Group group;
-    public final int weight;
 
-    GlowEnchantment(int id, String name, int max, int weight, EnchantmentTarget target) {
-        this(id, name, max, weight, target, new MatcherAdapter(target), Group.NONE);
+    GlowEnchantment(int id, String name, String userName, int max, int weight, EnchantmentTarget target) {
+        this(id, name, userName, max, weight, target, new MatcherAdapter(target), Group.NONE);
     }
 
-    GlowEnchantment(int id, String name, int max, int weight, EnchantmentTarget target, Group group) {
-        this(id, name, max, weight, target, new MatcherAdapter(target), group);
+
+    GlowEnchantment(int id, String name, String userName, int max, int weight, EnchantmentTarget target, Group group) {
+        this(id, name, userName, max, weight, target, new MatcherAdapter(target), group);
     }
 
-    GlowEnchantment(int id, String name, int max, int weight, EnchantmentTarget target, MaterialMatcher matcher) {
-        this(id, name, max, weight, target, matcher, Group.NONE);
+    GlowEnchantment(int id, String name, String userName, int max, int weight, EnchantmentTarget target, MaterialMatcher matcher) {
+        this(id, name, userName, max, weight, target, matcher, Group.NONE);
     }
 
-    GlowEnchantment(int id, String name, int max, int weight, EnchantmentTarget target, MaterialMatcher matcher, Group group) {
+    GlowEnchantment(int id, String name, String userName, int max, int weight, EnchantmentTarget target, MaterialMatcher matcher, Group group) {
         super(id);
         this.name = name;
+        this.userName = userName;
         this.maxLevel = max;
         this.weight = weight;
         this.target = target;
@@ -51,10 +86,13 @@ public class GlowEnchantment extends Enchantment implements WeightedRandom.Choic
         stopAcceptingRegistrations();
     }
 
-
     @Override
     public String getName() {
         return name;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     @Override
@@ -87,51 +125,17 @@ public class GlowEnchantment extends Enchantment implements WeightedRandom.Choic
         return weight;
     }
 
-    protected int getMinRange(int modifier) {
-        return 1 + modifier * 10;
+    protected int getMinRange(int level) {
+        return 1 + level * 10;
     }
 
-    protected int getMaxRange(int modifier) {
-        return getMinRange(modifier) + 5;
+    protected int getMaxRange(int level) {
+        return getMinRange(level) + 5;
     }
 
     public boolean isInRange(int level, int modifier) {
         return modifier >= getMinRange(level) && modifier <= getMaxRange(level);
     }
-
-    protected static final MaterialMatcher SWORD_OR_AXE = new MaterialMatcher() {
-        @Override
-        public boolean matches(Material item) {
-            return ToolType.SWORD.matches(item) || ToolType.AXE.matches(item);
-        }
-    };
-
-    protected static final MaterialMatcher BASE_TOOLS = new MaterialMatcher() {
-        @Override
-        public boolean matches(Material item) {
-            return ToolType.SPADE.matches(item) || ToolType.PICKAXE.matches(item) || ToolType.AXE.matches(item);
-        }
-    };
-
-    protected static final MaterialMatcher DIGGING_TOOLS = new MaterialMatcher() {
-        @Override
-        public boolean matches(Material material) {
-            return BASE_TOOLS.matches(material)
-                    || material == Material.SHEARS;
-        }
-    };
-
-    protected static final MaterialMatcher ALL_THINGS = new MaterialMatcher() {
-        @Override
-        public boolean matches(Material material) {
-            return EnchantmentTarget.TOOL.includes(material)
-                    || EnchantmentTarget.WEAPON.includes(material)
-                    || EnchantmentTarget.ARMOR.includes(material)
-                    || material == Material.FISHING_ROD
-                    || material == Material.BOW
-                    || material == Material.CARROT_STICK;
-        }
-    };
 
     protected enum Group {
         NONE,

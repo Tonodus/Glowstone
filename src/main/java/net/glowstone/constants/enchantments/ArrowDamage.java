@@ -4,16 +4,16 @@ import org.bukkit.enchantments.EnchantmentTarget;
 
 final class ArrowDamage extends GlowEnchantment {
     ArrowDamage() {
-        super(48, "Power", 5, 10, EnchantmentTarget.BOW);
+        super(48, "ARROW_DAMAGE", "Power", 5, 10, EnchantmentTarget.BOW);
     }
 
     @Override
-    public int getMinRange(int modifier) {
-        return 1 + (modifier - 1) * 10;
+    public int getMinRange(int level) {
+        return 1 + (level - 1) * 10;
     }
 
     @Override
-    public int getMaxRange(int modifier) {
-        return getMinRange(modifier) + 15;
+    public int getMaxRange(int level) {
+        return getMinRange(level) + 15;
     }
 }

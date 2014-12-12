@@ -4,16 +4,16 @@ import org.bukkit.enchantments.EnchantmentTarget;
 
 final class DigSpeed extends GlowEnchantment {
     DigSpeed() {
-        super(32, "Efficiency", 5, 10, EnchantmentTarget.TOOL, DIGGING_TOOLS);
+        super(32, "DIG_SPEED", "Efficiency", 5, 10, EnchantmentTarget.TOOL, DIGGING_TOOLS);
     }
 
     @Override
-    public int getMinRange(int modifier) {
-        return 1 + 10 * (modifier - 1);
+    public int getMinRange(int level) {
+        return 1 + 10 * (level - 1);
     }
 
     @Override
-    public int getMaxRange(int modifier) {
-        return super.getMinRange(modifier) + 50;
+    public int getMaxRange(int level) {
+        return super.getMinRange(level) + 50;
     }
 }

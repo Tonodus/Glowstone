@@ -2,11 +2,11 @@ package net.glowstone.constants.enchantments;
 
 final class Sharpness extends WeaponDamage {
     Sharpness() {
-        super(16, "Sharpness", 10);
+        super(16, "DAMAGE_ALL", "Sharpness", 10);
     }
 
     @Override
-    protected int getMinRange(int modifier) {
-        return 1 + (modifier - 1) * 11;
+    protected int getMinRange(int level) {
+        return 1 + (level - 1) * 11;
     }
 }

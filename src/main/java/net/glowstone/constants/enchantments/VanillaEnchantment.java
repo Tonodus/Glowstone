@@ -15,7 +15,7 @@ public enum VanillaEnchantment {
     DAMAGE_ARTHROPODS(new Arthropods()),
     KNOCKBACK(new Knockback()),
     FIRE_ASPECT(new FireAspect()),
-    LOOT_BONUS_MOBS(new LootBonusMobs()),
+    LOOT_BONUS_MOBS(new Looting()),
     DIG_SPEED(new DigSpeed()),
     SILK_TOUCH(new SilkTouch()),
     DURABILITY(new Durability()),

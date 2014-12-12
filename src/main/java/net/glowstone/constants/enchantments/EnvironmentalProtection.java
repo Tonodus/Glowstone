@@ -2,16 +2,16 @@ package net.glowstone.constants.enchantments;
 
 final class EnvironmentalProtection extends Protection {
     EnvironmentalProtection() {
-        super(0, "Protection", 10);
+        super(0, "PROTECTION_ENVIRONMENTAL", "Protection", 10);
     }
 
     @Override
-    protected int getMinRange(int modifier) {
-        return 1 + (modifier - 1) * 11;
+    protected int getMinRange(int level) {
+        return 1 + (level - 1) * 11;
     }
 
     @Override
-    protected int getMaxRange(int modifier) {
-        return getMinRange(modifier) + 20;
+    protected int getMaxRange(int level) {
+        return getMinRange(level) + 20;
     }
 }

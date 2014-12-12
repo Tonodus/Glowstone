@@ -4,16 +4,16 @@ import org.bukkit.enchantments.EnchantmentTarget;
 
 final class ArrowKnockback extends GlowEnchantment {
     ArrowKnockback() {
-        super(49, "Punch", 2, 2, EnchantmentTarget.BOW);
+        super(49, "ARROW_KNOCKBACK", "Punch", 2, 2, EnchantmentTarget.BOW);
     }
 
     @Override
-    public int getMinRange(int modifier) {
-        return 12 + (modifier - 1) * 20;
+    public int getMinRange(int level) {
+        return 12 + (level - 1) * 20;
     }
 
     @Override
-    public int getMaxRange(int modifier) {
-        return getMinRange(modifier) + 25;
+    public int getMaxRange(int level) {
+        return getMinRange(level) + 25;
     }
 }

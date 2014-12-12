@@ -4,16 +4,16 @@ import org.bukkit.enchantments.EnchantmentTarget;
 
 final class Thorns extends GlowEnchantment {
     Thorns() {
-        super(7, "Thorns", 3, 1, EnchantmentTarget.ARMOR_TORSO, new MatcherAdapter(EnchantmentTarget.ARMOR));
+        super(7, "THORNS", "Thorns", 3, 1, EnchantmentTarget.ARMOR_TORSO, new MatcherAdapter(EnchantmentTarget.ARMOR));
     }
 
     @Override
-    public int getMinRange(int modifier) {
-        return 10 + 20 * (modifier - 1);
+    public int getMinRange(int level) {
+        return 10 + 20 * (level - 1);
     }
 
     @Override
-    public int getMaxRange(int modifier) {
-        return super.getMinRange(modifier) + 50;
+    public int getMaxRange(int level) {
+        return super.getMinRange(level) + 50;
     }
 }
