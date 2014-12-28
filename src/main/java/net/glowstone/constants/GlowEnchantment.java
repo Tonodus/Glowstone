@@ -168,7 +168,7 @@ public final class GlowEnchantment extends Enchantment implements WeightedRandom
             this(id, name, max, weight, minValue, minInc, maxInc, target, new MatcherAdapter(target), GROUP_NONE);
         }
 
-        Impl(int id, String name, int max, int weight,int minValue, int minInc, int maxInc, EnchantmentTarget target, int group) {
+        Impl(int id, String name, int max, int weight, int minValue, int minInc, int maxInc, EnchantmentTarget target, int group) {
             this(id, name, max, weight, minValue, minInc, maxInc, target, new MatcherAdapter(target), group);
         }
 
