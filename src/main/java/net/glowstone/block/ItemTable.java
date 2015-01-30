@@ -169,6 +169,7 @@ public final class ItemTable {
         reg(Material.DAYLIGHT_DETECTOR_INVERTED, new BlockDaylightDetector());
         reg(Material.YELLOW_FLOWER, new BlockNeedsAttached());
         reg(Material.RED_ROSE, new BlockNeedsAttached());
+        reg(Material.DOUBLE_PLANT, new BlockDoublePlant());
         reg(Material.BROWN_MUSHROOM, new BlockNeedsAttached());
         reg(Material.RED_MUSHROOM, new BlockNeedsAttached());
         reg(Material.SUGAR_CANE_BLOCK, new BlockSugarCane());
