@@ -38,6 +38,7 @@ import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.InventoryView;
@@ -182,7 +183,12 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     /**
      * The player's current saturation level.
      */
-    private float saturation = 0;
+    private float saturation = 5;
+
+    /**
+     * Increased each tick the player has relatively high or empty foodLevel.
+     */
+    private int foodTickCounter = 0;
 
     /**
      * Whether to perform special scaling of the player's health.
@@ -407,6 +413,24 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
         List<MetadataMap.Entry> changes = metadata.getChanges();
         if (changes.size() > 0) {
             session.send(new EntityMetadataMessage(SELF_ID, changes));
+        }
+
+        // process hunger
+        if (food > 18 && health < getMaxHealth() && world.getGameRuleValue("naturalRegeneration").equals("true")) {
+            foodTickCounter++;
+            if (foodTickCounter >= 80) {
+                foodTickCounter = 0;
+                setHealth(Math.min(health + 1, getMaxHealth()));
+                exhaust(3);
+            }
+        } else if (food == 0) {
+            foodTickCounter++;
+            if (foodTickCounter >= 80) {
+                foodTickCounter = 0;
+                starve();
+            }
+        } else {
+            foodTickCounter = 0;
         }
 
         // update or remove entities
@@ -1168,6 +1192,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     @Override
     public void setFoodLevel(int food) {
         this.food = Math.min(food, 20);
+        this.foodTickCounter = 0;
         sendHealth();
     }
 
@@ -1179,6 +1204,51 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     @Override
     public void setExhaustion(float value) {
         exhaustion = value;
+
+        while (exhaustion > 4) {
+            exhaustion -= 4;
+            if (saturation >= 1) {
+                setSaturation(saturation - 1);
+            } else {
+                setFoodLevel(food - 1);
+            }
+        }
+    }
+
+    public void exhaust(float value) {
+        setExhaustion(exhaustion + value);
+    }
+
+    public void saturateNormally(int foodLevel, float saturation) {
+        if (foodLevel == 0) {
+            foodTickCounter = 0;
+        }
+
+        food = Math.min(20, food + foodLevel);
+        this.saturation = Math.min(food, this.saturation + saturation);
+        sendHealth();
+    }
+
+    private void starve() {
+        int min = 0;
+
+        switch (world.getDifficulty()) {
+            case PEACEFUL:
+                return;
+            case EASY:
+                min = 10;
+                break;
+            case NORMAL:
+                min = 1;
+                break;
+            case HARD:
+                min = 0;
+                break;
+        }
+
+        if (health - 1 >= min) {
+            damage(1, EntityDamageEvent.DamageCause.STARVATION);
+        }
     }
 
     @Override
@@ -1190,6 +1260,14 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     public void setSaturation(float value) {
         saturation = value;
         sendHealth();
+    }
+
+    public int getFoodTickCounter() {
+        return foodTickCounter;
+    }
+
+    public void setFoodTickCounter(int foodTickCounter) {
+        this.foodTickCounter = foodTickCounter;
     }
 
     private void sendHealth() {

@@ -19,7 +19,6 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
     // todo: the following tags
     // - int "Score"
     // - int "XpSeed"
-    // - int "foodTickTimer"
     // in "abilities":
     // - bool "invulnerable"
     // - bool "mayBuild"
@@ -57,6 +56,9 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
         }
         if (tag.isFloat("foodExhaustionLevel")) {
             entity.setExhaustion(tag.getFloat("foodExhaustionLevel"));
+        }
+        if (tag.isInt("foodTickTimer")) {
+            entity.setFoodTickCounter(tag.getInt("foodTickTimer"));
         }
 
         // spawn location
@@ -104,6 +106,7 @@ class PlayerStore extends HumanEntityStore<GlowPlayer> {
         tag.putInt("foodLevel", entity.getFoodLevel());
         tag.putFloat("foodSaturationLevel", entity.getSaturation());
         tag.putFloat("foodExhaustionLevel", entity.getExhaustion());
+        tag.putInt("foodTickTimer", entity.getFoodTickCounter());
 
         // spawn location
         Location bed = entity.getBedSpawnLocation();

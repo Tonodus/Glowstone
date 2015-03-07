@@ -5,17 +5,23 @@ import org.bukkit.GameMode;
 import org.bukkit.inventory.ItemStack;
 
 public class ItemFood extends ItemType {
+    private final int addFoodLevel;
+    private final float addSaturation;
+
+    public ItemFood(int addFoodLevel, float addSaturation) {
+        this.addFoodLevel = addFoodLevel;
+        this.addSaturation = addSaturation;
+    }
+
     @Override
     public void rightClickAir(GlowPlayer consumer, ItemStack holding) {
-        //TODO check whether the player can actually eat (is hungry)
-        if (consumer.getGameMode() != GameMode.CREATIVE && consumer.getGameMode() != GameMode.SPECTATOR && true) {
+        if (consumer.getGameMode() != GameMode.CREATIVE && consumer.getGameMode() != GameMode.SPECTATOR && consumer.getFoodLevel() < 20) {
             consumer.tryConsuming(holding, 32);
         }
     }
 
-
     @Override
     public void consumed(GlowPlayer consumer, ItemStack item) {
-        consumer.setSat
+        consumer.saturateNormally(addFoodLevel, addSaturation);
     }
 }

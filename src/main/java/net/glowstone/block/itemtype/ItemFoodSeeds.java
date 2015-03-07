@@ -9,7 +9,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-public class ItemFoodSeeds extends ItemFood {
+public class ItemFoodSeeds extends ItemType {
     private Material cropsType;
     private Material soilType;
 
