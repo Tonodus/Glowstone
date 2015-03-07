@@ -129,6 +129,15 @@ public class ItemType {
         }
     }
 
+    /**
+     * Called when a player consumed an item, f.e. by eating it.
+     * @param consumer The player
+     * @param item The item consumed
+     */
+    public void consumed(GlowPlayer consumer, ItemStack item) {
+       
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Utility stuff
 

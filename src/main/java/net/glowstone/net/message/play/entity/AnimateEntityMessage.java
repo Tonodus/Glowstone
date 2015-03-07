@@ -13,6 +13,7 @@ public final class AnimateEntityMessage implements Message {
     public static final int OUT_SWING_ARM = 0;
     public static final int OUT_HURT = 1;
     public static final int OUT_LEAVE_BED = 2;
+    public static final int OUT_EAT_FOOD = 3;
 
     private final int id, animation;
 

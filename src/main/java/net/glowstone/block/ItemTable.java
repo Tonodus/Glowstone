@@ -191,6 +191,8 @@ public final class ItemTable {
         reg(Material.SPONGE, new BlockSponge());
         reg(Material.TNT, new BlockTNT());
 
+        reg(Material.BREAD, new ItemConsumable(timeToConsume));
+        reg(Material.POTION, new ItemPotion());
         reg(Material.FLINT_AND_STEEL, new ItemFlintAndSteel());
         reg(Material.SIGN, new ItemSign());
         reg(Material.REDSTONE, new ItemPlaceAs(Material.REDSTONE_WIRE));

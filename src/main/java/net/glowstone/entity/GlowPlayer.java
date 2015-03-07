@@ -4,7 +4,9 @@ import com.flowpowered.networking.Message;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.glowstone.*;
+import net.glowstone.block.ItemTable;
 import net.glowstone.block.entity.TileEntity;
+import net.glowstone.block.itemtype.ItemType;
 import net.glowstone.constants.*;
 import net.glowstone.entity.meta.ClientSettings;
 import net.glowstone.entity.meta.MetadataIndex;
@@ -18,6 +20,7 @@ import net.glowstone.net.GlowSession;
 import net.glowstone.net.message.login.LoginSuccessMessage;
 import net.glowstone.net.message.play.entity.DestroyEntitiesMessage;
 import net.glowstone.net.message.play.entity.EntityMetadataMessage;
+import net.glowstone.net.message.play.entity.EntityStatusMessage;
 import net.glowstone.net.message.play.entity.EntityVelocityMessage;
 import net.glowstone.net.message.play.game.*;
 import net.glowstone.net.message.play.inv.*;
@@ -741,6 +744,35 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
      */
     public ClientSettings getSettings() {
         return settings;
+    }
+
+    @Override
+    protected void consumeItem() {
+        session.send(new EntityStatusMessage(id, EntityStatusMessage.EATING_ACCEPTED));
+
+        ItemStack inHand = getItemInHand();
+
+        PlayerItemConsumeEvent event = EventFactory.callEvent(new PlayerItemConsumeEvent(this, inHand));
+        if (event.isCancelled()) {
+            session.send(new SetWindowSlotMessage(0, getInventory().getHeldItemSlot(), inHand));
+            return;
+        }
+
+        consumeItem(inHand);
+
+        if (!event.getItem().equals(inHand)) {
+            session.send(new SetWindowSlotMessage(0, getInventory().getHeldItemSlot(), inHand));
+            return;
+        }
+
+        super.consumeItem();
+    }
+
+    private void consumeItem(ItemStack itemStack) {
+        ItemType type = ItemTable.instance().getItem(itemStack.getType());
+        if (type != null) {
+            type.consumed(this, itemStack);
+        }
     }
 
     @Override

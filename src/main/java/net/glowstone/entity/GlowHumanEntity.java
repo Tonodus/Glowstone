@@ -1,9 +1,11 @@
 package net.glowstone.entity;
 
 import com.flowpowered.networking.Message;
+import net.glowstone.entity.meta.MetadataIndex;
 import net.glowstone.entity.meta.profile.PlayerProfile;
 import net.glowstone.entity.objects.GlowItem;
 import net.glowstone.inventory.*;
+import net.glowstone.net.message.play.entity.AnimateEntityMessage;
 import net.glowstone.net.message.play.entity.EntityEquipmentMessage;
 import net.glowstone.net.message.play.entity.EntityHeadRotationMessage;
 import net.glowstone.net.message.play.entity.SpawnPlayerMessage;
@@ -12,7 +14,9 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EntityEquipment;
@@ -86,6 +90,9 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
      */
     private InventoryView inventoryView;
 
+    private int consumeCounter;
+    private ItemStack consuming;
+
     /**
      * Creates a human within the specified world and with the specified name.
      * @param location The location.
@@ -100,6 +107,7 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
         inventoryView = new GlowInventoryView(this);
         addViewer(inventoryView.getTopInventory());
         addViewer(inventoryView.getBottomInventory());
+        this.consuming = null;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -140,10 +148,61 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
     @Override
     public void pulse() {
         super.pulse();
+
+        if (consuming != null) {
+            if (consuming == getItemInHand()) {
+                if (consumeCounter < 25 && consumeCounter % 4 == 0) {
+                    world.playSound(location, Sound.EAT, 0.5f, 1f);
+                }
+
+                consumeCounter--;
+
+                if (consumeCounter == 0) {
+                    consumeItem();
+                }
+            } else {
+                stopConsuming();
+            }
+        }
+
         if (sleeping) {
             ++sleepingTicks;
         } else {
             sleepingTicks = 0;
+        }
+    }
+
+    protected void consumeItem() {
+        if (gameMode != GameMode.CREATIVE) {
+            if (consuming.getAmount() == 1) {
+                setItemInHand(null);
+            } else {
+                ItemStack inHand = getItemInHand();
+                inHand.setAmount(inHand.getAmount() - 1);
+                setItemInHand(inHand);
+            }
+        }
+
+        stopConsuming();
+    }
+
+    private void stopConsuming() {
+        consuming = null;
+        metadata.setBit(MetadataIndex.STATUS, 0x10, false);
+    }
+
+    public void tryConsuming(ItemStack stack, int timeToConsume) {
+        if (consuming == stack) {
+            return;
+        }
+
+        this.consumeCounter = timeToConsume;
+        this.consuming = stack;
+        metadata.setBit(MetadataIndex.STATUS, 0x10, true);
+        for (GlowPlayer near : world.getRawPlayers()) {
+            if (near.canSee((Player) this)) {
+                near.getSession().send(new AnimateEntityMessage(id, AnimateEntityMessage.OUT_EAT_FOOD));
+            }
         }
     }
 
