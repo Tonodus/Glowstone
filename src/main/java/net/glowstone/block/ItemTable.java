@@ -191,7 +191,15 @@ public final class ItemTable {
         reg(Material.SPONGE, new BlockSponge());
         reg(Material.TNT, new BlockTNT());
 
-        reg(Material.BREAD, new ItemConsumable(timeToConsume));
+        reg(Material.COOKED_FISH, new ItemFish());
+        reg(Material.RAW_FISH, new ItemFish());
+        reg(Material.COOKIE, new ItemFood(2, 0.4f));
+        reg(Material.MELON, new ItemFood(2, 1.2f));
+        reg(Material.MUTTON, new ItemFood(2, 1.2f));
+        reg(Material.RAW_CHICKEN, new ItemFood(2, 1.2f));
+        reg(Material.POISONOUS_POTATO, new ItemPoisonousPotato()); //TODO
+        reg(Material.SPIDER_EYE, new ItemFood(2, 3.2f)); //TODO
+        reg(Material.BREAD, new ItemFood());
         reg(Material.POTION, new ItemPotion());
         reg(Material.FLINT_AND_STEEL, new ItemFlintAndSteel());
         reg(Material.SIGN, new ItemSign());
@@ -217,7 +225,7 @@ public final class ItemTable {
         reg(Material.PUMPKIN_SEEDS, new ItemSeeds(Material.PUMPKIN_STEM, Material.SOIL));
         reg(Material.NETHER_STALK, new ItemSeeds(Material.NETHER_WARTS, Material.SOUL_SAND));
         reg(Material.CARROT_ITEM, new ItemFoodSeeds(Material.CARROT, Material.SOIL));
-        reg(Material.POTATO_ITEM, new ItemFoodSeeds(Material.POTATO, Material.SOIL));
+        reg(Material.POTATO_ITEM, new ItemFoodSeeds(Material.POTATO, Material.SOIL, 1, 0.6f));
         reg(Material.INK_SACK, new ItemDye());
         reg(Material.BANNER, new ItemBanner());
         reg(Material.WOOD_DOOR, new ItemPlaceAs(Material.WOODEN_DOOR));
