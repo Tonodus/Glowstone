@@ -1222,7 +1222,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
         while (exhaustion > 4) {
             exhaustion -= 4;
-            if (saturation >= 0) {
+            if (saturation > 0) {
                 setSaturation(Math.max(0, saturation - 1));
             } else {
                 FoodLevelChangeEvent event = EventFactory.callEvent(new FoodLevelChangeEvent(this, Math.max(0, food - 1)));
