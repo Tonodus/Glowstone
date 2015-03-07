@@ -651,6 +651,9 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     public void respawn() {
         // restore health
         setHealth(getMaxHealth());
+        setFoodLevel(20);
+        setSaturation(5);
+        setExhaustion(0);
 
         // determine spawn destination
         boolean spawnAtBed = false;
@@ -776,7 +779,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     }
 
     @Override
-    protected void consumeItem() {
+    public void consumeItem() {
         session.send(new EntityStatusMessage(id, EntityStatusMessage.EATING_ACCEPTED));
 
         ItemStack inHand = getItemInHand();

@@ -84,6 +84,9 @@ public final class DiggingHandler implements MessageHandler<GlowSession, Digging
         } else if (message.getState() == DiggingMessage.STATE_DROP_ITEMSTACK) {
             player.dropItemInHand(true);
             return;
+        } else if (message.getState() == DiggingMessage.STATE_FINISH_RIGHT_CLICK_ACTION) {
+            player.consumeItem();
+            return;
         } else {
             return;
         }

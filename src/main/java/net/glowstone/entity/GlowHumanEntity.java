@@ -172,7 +172,7 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
         }
     }
 
-    protected void consumeItem() {
+    public void consumeItem() {
         if (consumeItem(consuming) && gameMode != GameMode.CREATIVE) {
             if (consuming.getAmount() == 1) {
                 setItemInHand(null);
