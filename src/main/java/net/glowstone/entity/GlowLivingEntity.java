@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -386,7 +387,22 @@ public abstract class GlowLivingEntity extends GlowEntity implements LivingEntit
     public void setHealth(double health) {
         if (health < 0) health = 0;
         if (health > maxHealth) health = maxHealth;
-        this.health = health;
+
+        health -= this.health;
+        if (health > 0) {
+            heal(health, EntityRegainHealthEvent.RegainReason.CUSTOM);
+        } else {
+            damage(-health);
+        }
+    }
+
+    public void heal(double amount, EntityRegainHealthEvent.RegainReason reason) {
+        EntityRegainHealthEvent event = EventFactory.callEvent(new EntityRegainHealthEvent(this, amount, reason));
+        if (event.isCancelled()) {
+            return;
+        }
+
+        health += Math.min(getMaxHealth(), Math.max(0, event.getAmount()));
     }
 
     @Override
@@ -443,7 +459,7 @@ public abstract class GlowLivingEntity extends GlowEntity implements LivingEntit
         // apply damage
         amount = event.getFinalDamage();
         lastDamage = amount;
-        setHealth(health - amount);
+        this.health = Math.max(0, this.health - amount);
         playEffect(EntityEffect.HURT);
 
         // play sounds, handle death

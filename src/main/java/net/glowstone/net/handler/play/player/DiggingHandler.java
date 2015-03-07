@@ -110,6 +110,7 @@ public final class DiggingHandler implements MessageHandler<GlowSession, Digging
                 }
             }
             // STEP_SOUND actually is the block break particles
+            player.exhaust(0.025f);
             world.playEffectExceptTo(block.getLocation(), Effect.STEP_SOUND, block.getTypeId(), 64, player);
             block.setType(Material.AIR);
         } else if (revert) {

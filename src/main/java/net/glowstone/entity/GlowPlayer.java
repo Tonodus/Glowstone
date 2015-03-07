@@ -36,9 +36,11 @@ import org.bukkit.World.Environment;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.InventoryView;
@@ -420,7 +422,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
             foodTickCounter++;
             if (foodTickCounter >= 80) {
                 foodTickCounter = 0;
-                setHealth(Math.min(health + 1, getMaxHealth()));
+                heal(1, EntityRegainHealthEvent.RegainReason.SATIATED);
                 exhaust(3);
             }
         } else if (food == 0) {
@@ -1158,6 +1160,18 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
     @Override
     public void setHealth(double health) {
         super.setHealth(health);
+        sendHealth();
+    }
+
+    @Override
+    public void heal(double amount, EntityRegainHealthEvent.RegainReason reason) {
+        super.heal(amount, reason);
+        sendHealth();
+    }
+
+    @Override
+    public void damage(double amount, Entity source, EntityDamageEvent.DamageCause cause) {
+        super.damage(amount, source, cause);
         sendHealth();
     }
 

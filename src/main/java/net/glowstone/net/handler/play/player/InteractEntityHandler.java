@@ -48,6 +48,8 @@ public final class InteractEntityHandler implements MessageHandler<GlowSession, 
                     // Yes, this actually subtracts
                     hand.setDurability((short) (hand.getDurability() + durabilityLoss));
                 }
+
+                player.exhaust(0.3f);
             }
         } else if (message.getAction() == InteractEntityMessage.Action.INTERACT_AT.ordinal()) {
             // todo: Interaction with entity at a specified location (X, Y, and Z are present in the message)
