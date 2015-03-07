@@ -41,6 +41,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.InventoryView;
@@ -1205,7 +1206,7 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
     @Override
     public void setFoodLevel(int food) {
-        this.food = Math.min(food, 20);
+        this.food = food;
         this.foodTickCounter = 0;
         sendHealth();
     }
@@ -1221,10 +1222,14 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
 
         while (exhaustion > 4) {
             exhaustion -= 4;
-            if (saturation >= 1) {
-                setSaturation(saturation - 1);
+            if (saturation >= 0) {
+                setSaturation(Math.max(0, saturation - 1));
             } else {
-                setFoodLevel(food - 1);
+                FoodLevelChangeEvent event = EventFactory.callEvent(new FoodLevelChangeEvent(this, Math.max(0, food - 1)));
+                if (!event.isCancelled()) {
+                    food = event.getFoodLevel();
+                }
+                sendHealth();
             }
         }
     }
@@ -1233,14 +1238,26 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
         setExhaustion(exhaustion + value);
     }
 
-    public void saturateNormally(int foodLevel, float saturation) {
-        if (foodLevel == 0) {
-            foodTickCounter = 0;
-        }
+    public boolean saturateNormally(int foodLevel, float saturation) {
+        if (getGameMode() != GameMode.CREATIVE) {
+            FoodLevelChangeEvent event = EventFactory.callEvent(new FoodLevelChangeEvent(this, food + foodLevel));
+            if (event.isCancelled()) {
+                return false;
+            }
 
-        food = Math.min(20, food + foodLevel);
-        this.saturation = Math.min(food, this.saturation + saturation);
-        sendHealth();
+
+            if (foodLevel == 0) {
+                foodTickCounter = 0;
+            }
+
+            food = Math.min(20, event.getFoodLevel());
+            this.saturation = Math.min(food, this.saturation + saturation);
+            sendHealth();
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void starve() {

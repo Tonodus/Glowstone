@@ -119,7 +119,7 @@ public final class ItemTable {
         reg(Material.POTATO, new BlockDirectDrops(Material.POTATO_ITEM));
         reg(Material.PUMPKIN_STEM, new BlockPumpkinStem());
         reg(Material.CROPS, new BlockDirectDrops(Material.SEEDS));
-        reg(Material.CAKE_BLOCK, new BlockDropless());
+        reg(Material.CAKE_BLOCK, new BlockCake());
         reg(Material.WEB, new BlockWeb());
         reg(Material.FIRE, new BlockFire());
         reg(Material.MONSTER_EGGS, new BlockDropless());
