@@ -614,6 +614,12 @@ public abstract class GlowLivingEntity extends GlowEntity implements LivingEntit
         return Collections.unmodifiableCollection(potionEffects.values());
     }
 
+    public void removeAllPotionEffects() {
+        for (PotionEffect effect : getActivePotionEffects()) {
+            removePotionEffect(effect.getType());
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Custom name
 

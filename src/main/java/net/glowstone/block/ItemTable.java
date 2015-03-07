@@ -231,6 +231,7 @@ public final class ItemTable {
         reg(Material.BUCKET, new ItemBucket());
         reg(Material.WATER_BUCKET, new ItemFilledBucket(Material.WATER));
         reg(Material.LAVA_BUCKET, new ItemFilledBucket(Material.LAVA));
+        reg(Material.MILK_BUCKET, new ItemMilkBucket());
         reg(Material.WOOD_HOE, new ItemHoe());
         reg(Material.STONE_HOE, new ItemHoe());
         reg(Material.IRON_HOE, new ItemHoe());
