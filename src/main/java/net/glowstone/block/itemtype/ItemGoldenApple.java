@@ -17,7 +17,7 @@ public class ItemGoldenApple extends ItemFood {
     }
 
     @Override
-    public void consumed(GlowPlayer consumer, ItemStack item) {
+    public boolean consumed(GlowPlayer consumer, ItemStack item) {
         super.consumed(consumer, item);
 
         consumer.addPotionEffect(PE_ABSORPTION);
@@ -28,5 +28,7 @@ public class ItemGoldenApple extends ItemFood {
             consumer.addPotionEffect(PE_FIRE_RESISTANCE);
             consumer.addPotionEffect(PE_RESISTANCE);
         }
+
+        return true;
     }
 }

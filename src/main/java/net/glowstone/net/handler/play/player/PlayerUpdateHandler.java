@@ -43,5 +43,6 @@ public final class PlayerUpdateHandler implements MessageHandler<GlowSession, Pl
 
         // move event was not fired or did nothing, simply update location
         session.getPlayer().setRawLocation(newLocation);
+        session.getPlayer().onPlayerMoves(oldLocation);
     }
 }

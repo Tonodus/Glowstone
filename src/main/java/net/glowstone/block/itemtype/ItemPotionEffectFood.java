@@ -20,12 +20,12 @@ public class ItemPotionEffectFood extends ItemFood {
     }
 
     @Override
-    public void consumed(GlowPlayer consumer, ItemStack item) {
-        super.consumed(consumer, item);
-
+    public boolean consumed(GlowPlayer consumer, ItemStack item) {
         if (random.nextFloat() <= chance) {
             consumer.addPotionEffect(effect);
         }
+
+        return super.consumed(consumer, item);
     }
 
     protected PotionEffect getPotionEffect() {

@@ -173,7 +173,7 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
     }
 
     protected void consumeItem() {
-        if (gameMode != GameMode.CREATIVE) {
+        if (consumeItem(consuming) && gameMode != GameMode.CREATIVE) {
             if (consuming.getAmount() == 1) {
                 setItemInHand(null);
             } else {
@@ -184,6 +184,10 @@ public abstract class GlowHumanEntity extends GlowLivingEntity implements HumanE
         }
 
         stopConsuming();
+    }
+
+    protected boolean consumeItem(ItemStack itemStack) {
+        return true;
     }
 
     private void stopConsuming() {

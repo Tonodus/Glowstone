@@ -19,7 +19,7 @@ public class ItemFish extends ItemType {
     }
 
     @Override
-    public void consumed(GlowPlayer consumer, ItemStack item) {
+    public boolean consumed(GlowPlayer consumer, ItemStack item) {
         int addFoodLevel;
         float addSaturation;
 
@@ -53,6 +53,7 @@ public class ItemFish extends ItemType {
         }
 
         consumer.saturateNormally(addFoodLevel, addSaturation);
+        return true;
     }
 
 }

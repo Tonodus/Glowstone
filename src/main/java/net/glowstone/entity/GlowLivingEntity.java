@@ -615,7 +615,8 @@ public abstract class GlowLivingEntity extends GlowEntity implements LivingEntit
     }
 
     public void removeAllPotionEffects() {
-        for (PotionEffect effect : getActivePotionEffects()) {
+        Collection<PotionEffect> effects = new ArrayList<>(potionEffects.values());
+        for (PotionEffect effect : effects) {
             removePotionEffect(effect.getType());
         }
     }

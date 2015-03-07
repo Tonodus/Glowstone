@@ -12,10 +12,13 @@ public class ItemMilkBucket extends ItemType {
     }
 
     @Override
-    public void consumed(GlowPlayer consumer, ItemStack item) {
+    public boolean consumed(GlowPlayer consumer, ItemStack item) {
         consumer.removeAllPotionEffects();
+
         if (consumer.getGameMode() != GameMode.CREATIVE) {
             consumer.setItemInHand(new ItemStack(Material.BUCKET));
         }
+
+        return false;
     }
 }

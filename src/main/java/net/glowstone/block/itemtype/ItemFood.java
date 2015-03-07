@@ -21,7 +21,8 @@ public class ItemFood extends ItemType {
     }
 
     @Override
-    public void consumed(GlowPlayer consumer, ItemStack item) {
+    public boolean consumed(GlowPlayer consumer, ItemStack item) {
         consumer.saturateNormally(addFoodLevel, addSaturation);
+        return true;
     }
 }

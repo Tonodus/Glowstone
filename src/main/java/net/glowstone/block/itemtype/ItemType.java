@@ -133,9 +133,10 @@ public class ItemType {
      * Called when a player consumed an item, f.e. by eating it.
      * @param consumer The player
      * @param item The item consumed
+     * @return true if the item's amount should be reduced if the player's game mode isn't creative, false otherwise
      */
-    public void consumed(GlowPlayer consumer, ItemStack item) {
-       
+    public boolean consumed(GlowPlayer consumer, ItemStack item) {
+        return true;
     }
 
     ////////////////////////////////////////////////////////////////////////////

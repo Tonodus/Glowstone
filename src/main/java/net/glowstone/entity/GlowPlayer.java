@@ -332,6 +332,8 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
         if (!server.getResourcePackURL().isEmpty()) {
             setResourcePack(server.getResourcePackURL(), server.getResourcePackHash());
         }
+
+        sendHealth();
     }
 
     /**
@@ -785,20 +787,41 @@ public final class GlowPlayer extends GlowHumanEntity implements Player {
             return;
         }
 
-        consumeItem(inHand);
-
         if (!event.getItem().equals(inHand)) {
             session.send(new SetWindowSlotMessage(0, getInventory().getHeldItemSlot(), inHand));
+            consumeItem(event.getItem());
             return;
         }
 
         super.consumeItem();
     }
 
-    private void consumeItem(ItemStack itemStack) {
+    @Override
+    protected boolean consumeItem(ItemStack itemStack) {
         ItemType type = ItemTable.instance().getItem(itemStack.getType());
         if (type != null) {
-            type.consumed(this, itemStack);
+            return type.consumed(this, itemStack);
+        } else {
+            return super.consumeItem(itemStack);
+        }
+    }
+
+    /**
+     * Called when the player moves itself (e.g. not by teleporting)
+     * @param oldLocation the old (invalid) location
+     */
+    public void onPlayerMoves(Location oldLocation) {
+        //TODO check for water etc.
+
+        if (isOnGround()) {
+            int distance = (int) Math.round(location.distance(oldLocation) * 100f);
+            if (distance > 0) {
+                if (isSprinting()) {
+                    exhaust(0.001f * distance);
+                } else {
+                    exhaust(0.0001F * distance);
+                }
+            }
         }
     }
 
